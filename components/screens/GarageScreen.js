@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function SearchScreen({ navigation }) {
+export default function GarageScreen({ navigation }) {
     return (
         <View style={styles.settingsPage}>
             <Text
                 onPress={() => navigation.navigate('Home')}
-                style={styles.text}>Search Screen</Text>
+                style={styles.text}>Garage Screen</Text>
         </View>
     );
 }

@@ -4,17 +4,18 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // Screens
 import HomeStackScreen from './screens/HomeScreen';
-import SearchScreen from './screens/SearchScreen';
+import GarageScreen from './screens/GarageScreen';
 import AddScreen from './screens/AddScreen';
 import MapScreen from './screens/MapScreen';
 import ProfileScreen from './screens/ProfileScreen';
 
 //Screen names
 const homeName = "Home";
-const searchName = "Search";
+const garageName = "Garage";
 const addName = "Add";
 const mapName = "Map";
 const ProfileName = "Profile";
@@ -35,8 +36,8 @@ function MainContainer() {
                     iconName = focused ? 'home' : 'home-outline';
                     size = 30;
 
-                } else if (rn === searchName) {
-                    iconName = focused ? 'search' : 'search-outline';
+                } else if (rn === garageName) {
+                    iconName = focused ? 'garage' : 'garage';
                     size = 30;
 
                 } else if (rn === addName) {
@@ -54,7 +55,12 @@ function MainContainer() {
                 }
 
                 // You can return any component that you like here!
-                return <Ionicons name={iconName} size={size} color={color} />;
+                if (iconName === "garage"){
+                    return <MaterialCommunityIcons name={iconName} size={42} color={color} />
+                } else {
+                    return <Ionicons name={iconName} size={size} color={color} />;
+                }
+                
             },
             "tabBarActiveTintColor": "#ffe100",
             "tabBarInactiveTintColor": "grey",
@@ -64,7 +70,7 @@ function MainContainer() {
             >
 
             <Tab.Screen name={homeName} component={HomeStackScreen}/>
-            <Tab.Screen name={searchName} component={SearchScreen} />
+            <Tab.Screen name={garageName} component={GarageScreen} />
             <Tab.Screen name={addName} component={AddScreen} />
             <Tab.Screen name={mapName} component={MapScreen} />
             <Tab.Screen name={ProfileName} component={ProfileScreen} />

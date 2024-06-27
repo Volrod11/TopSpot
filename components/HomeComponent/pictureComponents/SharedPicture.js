@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, ImageBackground, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import PicturesPage from './PicturesPage';
 
 const PlaceholderImage = require('../../../assets/images/senna.png');
 
@@ -8,7 +9,7 @@ export default function SharedPicture({ }) {
     const navigation = useNavigation();
     return (
         <View style={styles.container}>
-            <Pressable onPress={() => navigation.navigate("TestPage", {idImage : PlaceholderImage})} style={{height: 500, width: 350,}}>
+            <Pressable onPress={() => navigation.navigate("PicturesPage")} style={{height: 500, width: 350,}}>
                 <ImageBackground  ImageViewer source={PlaceholderImage} resizeMode="cover" style={styles.picture}>
                     <View style={styles.footer}>
                         <Text style={styles.title}>Photo la plus partagée</Text>
