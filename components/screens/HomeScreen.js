@@ -4,9 +4,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import PicturesPage from './../HomeComponent/pictureComponents/PicturesPage';
 import TestPage from './../HomeComponent/pictureComponents/TestPage';
 
-import Garage from './../HomeComponent/pictureComponents/Garage';
+import MonthlyGarage from '../HomeComponent/pictureComponents/MonthlyGarage';
 import WeeklyPic from './../HomeComponent/pictureComponents/WeeklyPic';
 import SharedGarage from './../HomeComponent/pictureComponents/SharedGarage';
 import SharedPicture from './../HomeComponent/pictureComponents/SharedPicture';
@@ -21,7 +22,7 @@ function HomeScreen({ navigation }) {
             <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
                 <Image style={styles.topspotTitle} source={PlaceholderImage}/>
                 <WeeklyPic />
-                <Garage />
+                <MonthlyGarage />
                 <SharedGarage />
                 <FourPictures />
                 <SharedPicture />
@@ -39,6 +40,16 @@ export default function HomeStackScreen() {
         headerShown: false
     }} >
       <HomeStack.Screen name="HomeScreen" component={HomeScreen} />
+      <HomeStack.Screen name="PicturesPage" component={PicturesPage} options={{
+        headerShown: true,
+        headerBackTitle: 'Back',
+        headerStyle: {
+            backgroundColor: '#000000',
+        },
+        headerTitleStyle: {
+            color: '#fff',
+        },
+        }}/>
       <HomeStack.Screen name="TestPage" component={TestPage} options={{
         headerShown: true,
         headerBackTitle: 'Back',
@@ -48,7 +59,8 @@ export default function HomeStackScreen() {
         headerTitleStyle: {
             color: '#fff',
         },
-    }}/>
+        }}/>
+
     </HomeStack.Navigator>
   );
 }

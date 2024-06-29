@@ -1,24 +1,34 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, ImageBackground, Pressable  } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, Text, StyleSheet, ImageBackground, Pressable, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import PicturesPage from './PicturesPage';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
-import TestPage from './TestPage';
 
-const PlaceholderImage = require('../../../assets/images/r8.png');
 
-export default function Garage() {
+const PlaceholderImage = require('../../../assets/images/senna.png');
+
+export default function Garage({ }) {
     const navigation = useNavigation();
     return (
         <View style={styles.container}>
-            <Pressable onPress={() => navigation.navigate("TestPage", {idImage : PlaceholderImage} )} style={{height: 500, width: 350,}}>
-                <ImageBackground  ImageViewer source={PlaceholderImage} resizeMode="cover" style={styles.picture}>
-                    <View style={styles.footer}>
-                        <Text style={styles.title}>Garage du Mois</Text>
+            <Pressable onPress={() => navigation.navigate("TestPage2")} style={{height: "100%", width: "100%",}}>
+                <Image  ImageViewer source={PlaceholderImage} contentFit="cover" style={styles.picture}/>
+                <View style={styles.footer}>
+                    <View style={styles.info_garage}>
+                        <Ionicons name="car-sport-outline" size={20} color="rgb(150,150,150)" />
+                        <Text style={styles.info_number}>4</Text>
                     </View>
-                </ImageBackground>
+                    <View style={styles.info_garage}>
+                        <Ionicons name="heart-outline" size={20} color="rgb(150,150,150)" />
+                        <Text style={styles.info_number}>3.5k</Text>
+                    </View>
+                    <View style={styles.info_garage}>
+                        <Ionicons name="chatbox-outline" size={20} color="rgb(150,150,150)" />
+                        <Text style={styles.info_number}>5</Text>
+                    </View>
+                </View>
             </Pressable>
         </View>
     );
@@ -29,20 +39,25 @@ export default function Garage() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        height: 500,
-        width: 350,
-        marginBottom: 50,
+        height: 290,
+        width: "48%",
+        marginBottom: 20,
         borderRadius: 15,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        backgroundColor: "white",
+        margin: "1%",
     },
     footer : {
-        height : 90,
+        height : 40,
         width : "100%",
-        backgroundColor : "rgba(0,0,0,0.42)",
+        backgroundColor : "rgb(0,0,0)",
         padding : "40px",
         position: "absolute",
         bottom: 0,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        padding : 8,
     },
     title : {
         color : "#fff",
@@ -51,8 +66,21 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     picture: {
-        flex: 1,
         justifyContent: 'center',
-        borderRadius: 40,
+        width: "100%",
+        height: 250,
+    },
+    info_number : {
+        color : "#fff",
+        padding : 4,
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    info_garage : {
+        flex: 1,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
     }
 });

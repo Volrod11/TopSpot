@@ -1,18 +1,23 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, ImageBackground, Pressable  } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 
-const PlaceholderImage = require('../../../assets/images/F150.png');
+import TestPage from './TestPage';
 
-export default function WeeklyPic({ }) {
+const PlaceholderImage = require('../../../assets/images/r8.png');
+
+export default function MonthlyGarage() {
     const navigation = useNavigation();
     return (
         <View style={styles.container}>
-            <Pressable onPress={() => navigation.navigate("PicturesPage", {idImage : PlaceholderImage})} style={{height: 500, width: 350,}}>
+            <Pressable onPress={() => navigation.navigate("TestPage", {idImage : PlaceholderImage} )} style={{height: 500, width: 350,}}>
                 <ImageBackground  ImageViewer source={PlaceholderImage} resizeMode="cover" style={styles.picture}>
-                        <View style={styles.footer}>
-                            <Text style={styles.title}>Photo de la Semaine</Text>
-                        </View>
+                    <View style={styles.footer}>
+                        <Text style={styles.title}>Garage du Mois</Text>
+                    </View>
                 </ImageBackground>
             </Pressable>
         </View>
