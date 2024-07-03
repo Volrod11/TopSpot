@@ -18,7 +18,7 @@ const PlaceholderImageCorvette = require('../../../assets/images/corvette.png');
 const PlaceholderImage570s = require('../../../assets/images/570s.png');
 const PlaceholderImageM3 = require('../../../assets/images/m3.png');
 
-export default function TestPage2({ }) {
+export default function GaragePage({ }) {
     return (
         <View style={styles.container}>
           <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>

@@ -9,7 +9,7 @@ const Stack = createNativeStackNavigator(); // Stack contains Screen & Navigator
 
 const PlaceholderImage = require('../../../assets/images/r8.png');
 
-export default function TestPage({ route }) {
+export default function PicturePages({ route }) {
     const { idImage } = route.params;
     return (
         <View style={styles.container}>

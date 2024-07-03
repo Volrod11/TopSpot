@@ -4,8 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import PicturesPage from './../HomeComponent/pictureComponents/PicturesPage';
-import TestPage2 from './../HomeComponent/pictureComponents/TestPage2';
+import GaragesPage from '../HomeComponent/pages/GaragesPage';
+import GaragePage from '../HomeComponent/pages/GaragePage';
 
 import Garage from '../HomeComponent/pictureComponents/Garage';
 import WeeklyPic from './../HomeComponent/pictureComponents/WeeklyPic';
@@ -19,15 +19,7 @@ const PlaceholderImage = require('../../assets/topspottitle.png');
 function GarageScreen({ navigation }) {
     return (
         <View style={styles.garagePage}>
-            <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
-                <View style={styles.container}>
-                    <Garage />
-                    <Garage />
-                    <Garage />
-                    <Garage />
-                    <Garage />
-                </View>
-            </ScrollView>
+            <GaragesPage />
         </View>
     );
 }
@@ -41,7 +33,7 @@ export default function GarageStackScreen() {
         headerShown: false
     }} >
       <GarageStack.Screen name="GarageScreen" component={GarageScreen} />
-      <GarageStack.Screen name="TestPage2" component={TestPage2} options={{
+      <GarageStack.Screen name="GaragePage" component={GaragePage} options={{
         headerShown: true,
         headerBackTitle: 'Back',
         headerStyle: {
@@ -65,17 +57,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: "#0D0D0D",
         paddingTop: 70,
-    },
-    scrollView: {
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    container: {
-        flex: 1,
-        backgroundColor: '#0D0D0D',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        alignItems: 'flex-start',
     },
 });
 

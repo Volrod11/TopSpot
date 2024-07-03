@@ -4,8 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import PicturesPage from './../HomeComponent/pictureComponents/PicturesPage';
-import TestPage from './../HomeComponent/pictureComponents/TestPage';
+import PicturesPage from '../HomeComponent/pages/PicturesPage';
+import TestPage from '../HomeComponent/pages/PicturePage';
 
 import MonthlyGarage from '../HomeComponent/pictureComponents/MonthlyGarage';
 import WeeklyPic from './../HomeComponent/pictureComponents/WeeklyPic';

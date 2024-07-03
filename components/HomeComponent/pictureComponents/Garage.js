@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, ImageBackground, Pressable, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import PicturesPage from './PicturesPage';
+import PicturesPage from '../pages/PicturesPage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
@@ -13,7 +13,7 @@ export default function Garage({ }) {
     const navigation = useNavigation();
     return (
         <View style={styles.container}>
-            <Pressable onPress={() => navigation.navigate("TestPage2")} style={{height: "100%", width: "100%",}}>
+            <Pressable onPress={() => navigation.navigate("GaragePage")} style={{height: "100%", width: "100%",}}>
                 <Image  ImageViewer source={PlaceholderImage} contentFit="cover" style={styles.picture}/>
                 <View style={styles.footer}>
                     <View style={styles.info_garage}>

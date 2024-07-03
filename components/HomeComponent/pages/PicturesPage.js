@@ -78,11 +78,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start',
+    alignItems: 'center', //Centered horizontally
   },
   bouton: {
-    width: "32%",
+    width: "32.93%",
     height: 200,
-    margin: 1,
+    margin: "0.2%",
   },
   image: {
     width: "100%",
