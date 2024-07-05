@@ -34,18 +34,23 @@ function MainContainer() {
               case homeName:
                 iconName = focused ? "home" : "home-outline";
                 size = 30;
+                break;
               case garageName:
                 iconName = "garage";
                 size = 42;
+                break;
               case addName:
                 iconName = focused ? "add-circle" : "add-circle-outline";
                 size = 50;
+                break;
               case mapName:
                 iconName = focused ? "map" : "map-outline";
                 size = 30;
+                break;
               case ProfileName:
                 iconName = focused ? "person" : "person-outline";
                 size = 30;
+                break;
             }
 
             // You can return any component that you like here!
