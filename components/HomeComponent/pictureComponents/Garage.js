@@ -11,23 +11,24 @@ const PlaceholderImage = require('../../../assets/images/senna.png');
 
 export default function Garage({ }) {
     const navigation = useNavigation();
+    const datas = [
+        {name:"car-sport-outline", number:'4'},
+        {name:"heart-outline", number:'3.5K'},
+        {name:"chatbox-outline", number:'5'},
+    ]
+    
     return (
         <View style={styles.container}>
             <Pressable onPress={() => navigation.navigate("GaragePage")} style={{height: "100%", width: "100%",}}>
                 <Image  ImageViewer source={PlaceholderImage} contentFit="cover" style={styles.picture}/>
                 <View style={styles.footer}>
+                    
+                    {datas.map((data) => (
                     <View style={styles.info_garage}>
-                        <Ionicons name="car-sport-outline" size={20} color="rgb(150,150,150)" />
-                        <Text style={styles.info_number}>4</Text>
+                        <Ionicons name={data.name} size={20} color="rgb(150,150,150)" />
+                        <Text style={styles.info_number}>{data.number}</Text>
                     </View>
-                    <View style={styles.info_garage}>
-                        <Ionicons name="heart-outline" size={20} color="rgb(150,150,150)" />
-                        <Text style={styles.info_number}>3.5k</Text>
-                    </View>
-                    <View style={styles.info_garage}>
-                        <Ionicons name="chatbox-outline" size={20} color="rgb(150,150,150)" />
-                        <Text style={styles.info_number}>5</Text>
-                    </View>
+                    ))}
                 </View>
             </Pressable>
         </View>
