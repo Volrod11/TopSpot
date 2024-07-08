@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Session } from '@supabase/supabase-js'
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -18,18 +20,18 @@ const homeName = "Home";
 const garageName = "Garage";
 const addName = "Add";
 const mapName = "Map";
-const ProfileName = "Profile";
+const profileName = "Profile";
 
 const Tab = createBottomTabNavigator();
 
-function MainContainer() {
+function MainContainer({ session }: { session: Session }) {
   return (
     <NavigationContainer>
         <Tab.Navigator 
             initialRouteName={homeName}
             screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color, size }) => {
-                let iconName;
+                let iconName: string | undefined = "";
                 let rn = route.name;
 
                 if (rn === homeName) {
@@ -48,7 +50,7 @@ function MainContainer() {
                     iconName = focused ? 'map' : 'map-outline';
                     size = 30;
 
-                } else if (rn === ProfileName) {
+                } else if (rn === profileName) {
                     iconName = focused ? 'person' : 'person-outline';
                     size = 30;
 
@@ -73,7 +75,8 @@ function MainContainer() {
             <Tab.Screen name={garageName} component={GarageScreen} />
             <Tab.Screen name={addName} component={AddScreen} />
             <Tab.Screen name={mapName} component={MapScreen} />
-            <Tab.Screen name={ProfileName} component={ProfileScreen} />
+            <Tab.Screen name={profileName} component={ProfileScreen}  />
+            
 
         </Tab.Navigator>
         <StatusBar style = "light" />

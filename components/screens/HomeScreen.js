@@ -8,10 +8,10 @@ import PicturesPage from '../HomeComponent/pages/PicturesPage';
 import TestPage from '../HomeComponent/pages/PicturePage';
 
 import MonthlyGarage from '../HomeComponent/pictureComponents/MonthlyGarage';
-import WeeklyPic from './../HomeComponent/pictureComponents/WeeklyPic';
-import SharedGarage from './../HomeComponent/pictureComponents/SharedGarage';
-import SharedPicture from './../HomeComponent/pictureComponents/SharedPicture';
-import FourPictures from './../HomeComponent/pictureComponents/FourPictures';
+import WeeklyPic from '../HomeComponent/pictureComponents/WeeklyPic';
+import SharedGarage from '../HomeComponent/pictureComponents/SharedGarage';
+import SharedPicture from '../HomeComponent/pictureComponents/SharedPicture';
+import FourPictures from '../HomeComponent/pictureComponents/FourPictures';
 
 
 const PlaceholderImage = require('../../assets/topspottitle.png');

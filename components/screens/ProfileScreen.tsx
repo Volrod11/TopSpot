@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
+import { Session } from '@supabase/supabase-js'
 
 import PicturesPage from '../HomeComponent/pages/PicturesPage';
 import TabViewProfile from '../HomeComponent/useComponent/TabViewProfile'
@@ -8,12 +9,12 @@ import TabViewProfile from '../HomeComponent/useComponent/TabViewProfile'
 const PlaceholderImageR8 = require('../../assets/images/r8.png');
 
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen() {
     return (
         <View style={styles.profile_page}>
             <View style={styles.info_user}>
                 <View style={styles.profile_image}>
-                    <Image  ImageViewer source={PlaceholderImageR8} contentFit="cover" style={styles.image}/>
+                    <Image src={PlaceholderImageR8} style={styles.image} />
                 </View>
                 <Text style={styles.user_name}>Garricastres</Text>
             </View>
