@@ -9,12 +9,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 
-// Screens
-import HomeStackScreen from './screens/HomeScreen';
-import GarageScreen from './screens/GarageScreen';
-import AddScreen from './screens/AddScreen';
-import MapScreen from './screens/MapScreen';
-import ProfileScreen from './screens/ProfileScreen';
+
 
 //Screen names
 const homeName = "Home";

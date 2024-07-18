@@ -4,17 +4,21 @@ import { Button, Text, View, StyleSheet, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../../types';
 
-const Stack = createNativeStackNavigator(); // Stack contains Screen & Navigator properties
+type PicturePageRouteProp = RouteProp<RootStackParamList, 'PicturePage'>;
 
-const PlaceholderImage = require('../../../assets/images/r8.png');
+type Props = {
+  route: PicturePageRouteProp;
+};
 
-export default function PicturePages({ route }) {
-    const { idImage } = route.params;
+
+const PicturePage: React.FC<Props> = ({ route }) => {
     return (
         <View style={styles.container}>
             <View style={styles.imageContainer}>
-                <Image source={idImage} style={styles.image} />
+                <Image src={route.params.idImage} style={styles.image} />
             </View>
             <StatusBar style="auto" />
         </View>
@@ -22,6 +26,7 @@ export default function PicturePages({ route }) {
 }
 
 
+export default PicturePage;
 
 const styles = StyleSheet.create({
     container: {

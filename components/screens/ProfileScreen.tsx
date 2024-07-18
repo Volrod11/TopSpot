@@ -2,14 +2,15 @@ import * as React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Session } from '@supabase/supabase-js'
 
-import PicturesPage from '../HomeComponent/pages/PicturesPage';
+import PicturePage from '../HomeComponent/pages/PicturePage';
 import TabViewProfile from '../HomeComponent/useComponent/TabViewProfile'
-
+import { createStackNavigator } from '@react-navigation/stack';
+import { RootStackParamList } from "../../types";
 
 const PlaceholderImageR8 = require('../../assets/images/r8.png');
+const Tab = createStackNavigator<RootStackParamList>();
 
-
-export default function ProfileScreen() {
+const ProfileScreen: React.FC = () => {
     return (
         <View style={styles.profile_page}>
             <View style={styles.info_user}>
@@ -23,8 +24,17 @@ export default function ProfileScreen() {
     );
 }
 
+const ProfileScreenStack: React.FC = () => {
+    return (
+        <Tab.Navigator>
+            <Tab.Screen name="ProfileScreen" component={ProfileScreen} />
+            <Tab.Screen name="PicturePage" component={PicturePage} />
+        </Tab.Navigator>
+    )
+}
 
 
+export default ProfileScreenStack;
 
 const styles = StyleSheet.create({
     profile_page: {
