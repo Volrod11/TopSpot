@@ -4,10 +4,18 @@ import { Button, Text, View, StyleSheet, Image, ScrollView } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../../types';
+
 import PagerView from 'react-native-pager-view';
 
 const Stack = createNativeStackNavigator(); // Stack contains Screen & Navigator properties
 
+type GarageRouteProp = RouteProp<RootStackParamList, 'GaragePage'>;
+
+type Props = {
+    route: GarageRouteProp;
+};
 
 const PlaceholderImageR8 = require('../../../assets/images/r8.png');
 const PlaceholderImageF150 = require('../../../assets/images/F150.png');
@@ -18,7 +26,7 @@ const PlaceholderImageCorvette = require('../../../assets/images/corvette.png');
 const PlaceholderImage570s = require('../../../assets/images/570s.png');
 const PlaceholderImageM3 = require('../../../assets/images/m3.png');
 
-export default function GaragePage({ }) {
+const GaragePage: React.FC<Props> = ({ route }) => {
     return (
         <View style={styles.container}>
           <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
@@ -26,7 +34,7 @@ export default function GaragePage({ }) {
               <Text style={styles.title}>Hypercars</Text>
               <PagerView style={styles.container2} initialPage={0}>
                 <View style={styles.categorie_left} key="1">
-                  <Image  ImageViewer source={PlaceholderImageSenna} contentFit="cover" style={styles.image}/>
+                  <Image src={PlaceholderImageSenna} style={styles.image}/>
                   <View style={styles.infos_car} >
                     <Text style={styles.info}>McLaren</Text>
                     <Text style={styles.info}>2017</Text>
@@ -54,7 +62,7 @@ export default function GaragePage({ }) {
                     <Text style={styles.info}>McLaren</Text>
                     <Text style={styles.info}>McLaren</Text>
                   </View>
-                  <Image  ImageViewer source={PlaceholderImageCorvette} contentFit="cover" style={styles.image}/>
+                  <Image src={PlaceholderImageCorvette} style={styles.image}/>
                 </View>
               </PagerView>
             </View>
@@ -62,7 +70,7 @@ export default function GaragePage({ }) {
               <Text style={styles.title}>Supercars</Text>
               <PagerView style={styles.container2} initialPage={0}>
                 <View style={styles.categorie_left}>
-                  <Image  ImageViewer source={PlaceholderImage570s} contentFit="cover" style={styles.image}/>
+                  <Image src={PlaceholderImage570s} style={styles.image}/>
                   <View style={styles.infos_car}>
                     <Text style={styles.info}>McLaren</Text>
                     <Text style={styles.info}>McLaren</Text>
@@ -90,7 +98,7 @@ export default function GaragePage({ }) {
                     <Text style={styles.info}>McLaren</Text>
                     <Text style={styles.info}>McLaren</Text>
                   </View>
-                  <Image ImageViewer source={PlaceholderImageM3} contentFit="cover" style={styles.image}/>
+                  <Image src={PlaceholderImageM3} style={styles.image}/>
                 </View>
                 <View style={styles.categorie_right} key="2">
                   <View style={styles.infos_car} >
@@ -103,7 +111,7 @@ export default function GaragePage({ }) {
                     <Text style={styles.info}>800 cv</Text>
                     <Text style={styles.info}>1198 kg</Text>
                   </View>
-                  <Image  ImageViewer source={PlaceholderImageXM} contentFit="cover" style={styles.image}/>
+                  <Image src={PlaceholderImageXM} style={styles.image}/>
                 </View>
               </PagerView>
             </View>

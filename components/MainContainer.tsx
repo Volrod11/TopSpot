@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Session } from '@supabase/supabase-js'
 
@@ -11,14 +11,14 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 // Screens
 import HomeStackScreen from './screens/HomeScreen';
 import GarageScreen from './screens/GarageScreen';
-import AddScreen from './screens/AddScreen';
+import CameraScreen from './screens/CameraScreen';
 import MapScreen from './screens/MapScreen';
 import ProfileScreen from './screens/ProfileScreen';
 
 //Screen names
 const homeName = "Home";
 const garageName = "Garage";
-const addName = "Add";
+const cameraName = "Camera";
 const mapName = "Map";
 const profileName = "Profile";
 
@@ -42,7 +42,7 @@ function MainContainer({ session }: { session: Session }) {
                     iconName = focused ? 'garage' : 'garage';
                     size = 30;
 
-                } else if (rn === addName) {
+                } else if (rn === cameraName) {
                     iconName = focused ? 'add-circle' : 'add-circle-outline';
                     size = 50;
 
@@ -66,14 +66,17 @@ function MainContainer({ session }: { session: Session }) {
             },
             "tabBarActiveTintColor": "#ffe100",
             "tabBarInactiveTintColor": "grey",
-            "tabBarStyle": { backgroundColor: '#000000', height: 110 },
+            "tabBarStyle": {
+                backgroundColor: '#000000',
+                height: 110,
+                display: route.name === cameraName ? 'none' : 'flex', },
             "headerShown": false,
             })}
             >
 
             <Tab.Screen name={homeName} component={HomeStackScreen}/>
             <Tab.Screen name={garageName} component={GarageScreen} />
-            <Tab.Screen name={addName} component={AddScreen} />
+            <Tab.Screen name={cameraName} component={CameraScreen} initialParams={{ user_id: session.user.id }}/>
             <Tab.Screen name={mapName} component={MapScreen} />
             <Tab.Screen name={profileName} component={ProfileScreen}  />
             
@@ -87,7 +90,19 @@ function MainContainer({ session }: { session: Session }) {
 
 
 
-
+const styles = StyleSheet.create({
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    cameraButton: {
+      backgroundColor: 'tomato',
+      borderRadius: 50,
+      padding: 10,
+      marginBottom: 20,
+    },
+  });
 
 
 

@@ -2,5 +2,8 @@
 export type RootStackParamList = {
     PicturesPage: undefined;
     ProfileScreen: undefined;
-    PicturePage: { idImage: string };
+    PicturePage: { idPicture: string, picture: string };
+    Garage: { garage_id: string };
+    GaragePage: { garage_id: string };
+    TabScreen: { user_id: string };
 };

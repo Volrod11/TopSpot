@@ -1,56 +1,81 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, Text, View, StyleSheet, Image, Pressable, ImageBackground, ScrollView } from 'react-native';
+import { Button, Text, View, StyleSheet, Image, Pressable, ImageBackground, ScrollView, FlatList, ListRenderItem  } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../../../lib/supabase';
 import { RootStackParamList } from '../../../types';
 import { StackScreenProps } from '@react-navigation/stack';
 
-type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'PicturesPage'>;
+type PicturesPageProps  = {
+  user_id?: string;
 };
 type PicturesPageNavigationProp = StackNavigationProp<RootStackParamList, 'PicturePage'>;
 
 
-const PlaceholderImageR8 = require('../../../assets/images/r8.png');
-const PlaceholderImageF150 = require('../../../assets/images/F150.png');
-const PlaceholderImageLigier = require('../../../assets/images/ligier.png');
-const PlaceholderImageSenna = require('../../../assets/images/senna.png');
+type Picture = {
+  id: string;
+  picture: string;
+};
 
-const PicturesPage: React.FC = () => {
-  const [pictures, setPictures] = useState<{ picture: string }[]>([])
+const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
+  const [pictures, setPictures] = useState<{ id: string; picture: string }[]>([])
+
+
   const navigation = useNavigation<PicturesPageNavigationProp>();
   
-  const goToPicturePages = (idImage: string) => {
-    navigation.navigate('PicturePage', { idImage : idImage });
+  const goToPicturePages = (idPicture : string, picture: string) => {
+    navigation.navigate('PicturePage', { idPicture : idPicture, picture : picture });
   };
 
-  async function getPicturesFromUser() {
-    const { data } = await supabase.from("pictures").select("picture");
-    setPictures(data ?? []);
-  }
+  useEffect(() => {
+    async function getPicturesFromUser() {
+      if (user_id === null) {
+        const { data, error } = await supabase.from("pictures").select("id, picture");
+        if (error) {
+          console.error("Error fetching pictures: ", error);
+        }
 
-  getPicturesFromUser();
-    return (
-      <View style={styles.picturesPage}>
-        <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
-        <View style={styles.container}>
-          {pictures.map((image: { picture: string }) => (
-            <Pressable onPress={() => goToPicturePages(image.picture)} style={styles.bouton}>
-              <Image src={image.picture} style={styles.image} />
-            </Pressable>
-          ))}
-        </View>
-        </ScrollView>
-        <StatusBar style="auto" />
-      </View>
+        setPictures(data ?? []);
+      } else if(user_id !== null) {
+        const { data, error } = await supabase.from("pictures").select("id, picture").eq('user_id', user_id);
+        if (error) {
+          console.error("Error fetching pictures: ", error);
+        }
+
+        setPictures(data ?? []);
+      }
       
-    );
+    }
+
+    getPicturesFromUser();
+  }, []);
+  
+
+  const renderItem: ListRenderItem<Picture> = ({ item }) => (
+    <Pressable key={item.id} onPress={() => goToPicturePages(item.id, item.picture)} style={styles.bouton}>
+      <Image source={{ uri: item.picture }} style={styles.image} />
+    </Pressable>
+  );
+
+  return (
+    <View style={styles.picturesPage}>
+      <FlatList
+        data={pictures}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        numColumns={3}
+
+      />
+      <StatusBar style="auto" />
+    </View>
+  );
 }
 
 export default PicturesPage;
@@ -58,32 +83,21 @@ export default PicturesPage;
 const styles = StyleSheet.create({
   picturesPage: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: "#0D0D0D",
-  },
-  scrollView: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: "100%",
     backgroundColor: '#0D0D0D',
   },
   container: {
-    flex: 1,
-    backgroundColor: '#0D0D0D',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   bouton: {
-    width: "32.93%",
-    height: 200,
-    margin: "0.2%",
+    flex: 1/3,
+    margin: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 0,
+    width: '100%',
+    height: 140,
+    resizeMode: 'cover',
   },
   
 });

@@ -6,11 +6,37 @@ import PicturePage from '../HomeComponent/pages/PicturePage';
 import TabViewProfile from '../HomeComponent/useComponent/TabViewProfile'
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from "../../types";
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 
 const PlaceholderImageR8 = require('../../assets/images/r8.png');
 const Tab = createStackNavigator<RootStackParamList>();
 
+type User = {
+    id: string;
+    email?: string;
+    user_metadata?: {
+        [key: string]: any;
+    };
+  };
+
 const ProfileScreen: React.FC = () => {
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('Error fetching session:', error);
+            return;
+          }
+          const sessionUser = data.session?.user ?? null;
+          setUser(sessionUser);
+        };
+    
+        fetchUser();
+      }, []);
+
     return (
         <View style={styles.profile_page}>
             <View style={styles.info_user}>
@@ -19,7 +45,7 @@ const ProfileScreen: React.FC = () => {
                 </View>
                 <Text style={styles.user_name}>Garricastres</Text>
             </View>
-            <TabViewProfile />
+            {user && <TabViewProfile user_id={user.id} />}
         </View>
     );
 }

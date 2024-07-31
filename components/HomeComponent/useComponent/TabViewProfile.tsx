@@ -5,15 +5,25 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import PicturesPage from '../pages/PicturesPage';
 import GaragesPage from '../pages/GaragesPage';
 
-const PicturesRoute = () => (
-    <PicturesPage />
+
+type TabViewProfileProps = {
+  user_id: string; 
+};
+
+type State = {
+  index: number;
+  routes: { key: string; title: string }[];
+};
+
+const PicturesRoute = (userId : string) => () => (
+    <PicturesPage user_id={userId} />
 );
-const GaragesRoute = () => (
-    <GaragesPage />
+const GaragesRoute = (userId : string) => () => (
+    <GaragesPage user_id={userId}/>
 );
 
-export default class TabViewProfile extends React.Component {
-  state = {
+class TabViewProfile extends React.Component<TabViewProfileProps, State> {
+  state: State = {
     index: 0,
     routes: [
       { key: 'pictures', title: 'Photos' },
@@ -22,12 +32,14 @@ export default class TabViewProfile extends React.Component {
   };
 
   render() {
+    const { user_id } = this.props;
+
     return (
       <TabView
         navigationState={this.state}
         renderScene={SceneMap({
-          pictures: PicturesRoute,
-          garages: GaragesRoute,
+          pictures: PicturesRoute(user_id),
+          garages: GaragesRoute(user_id),
         })}
         onIndexChange={index => this.setState({ index })}
         initialLayout={{ width: Dimensions.get('window').width }}
@@ -37,6 +49,8 @@ export default class TabViewProfile extends React.Component {
     );
   }
 }
+
+export default TabViewProfile;
 
 const styles = StyleSheet.create({
   container: {
