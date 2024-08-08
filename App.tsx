@@ -7,6 +7,7 @@ import { View, StyleSheet } from 'react-native'
 import { Session } from '@supabase/supabase-js'
 import { StatusBar } from 'expo-status-bar';
 import React from 'react'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -22,10 +23,12 @@ export default function App() {
   }, [])
 
   return (
-    <View style={styles.container}>
-      {session && session.user ? <MainContainer key={session.user.id} session={session} /> : <Auth />}
-      <StatusBar style = "light" />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        {session && session.user ? <MainContainer key={session.user.id} session={session} /> : <Auth />}
+        <StatusBar style = "light" />
+      </View>
+    </GestureHandlerRootView>
   )
 }
 

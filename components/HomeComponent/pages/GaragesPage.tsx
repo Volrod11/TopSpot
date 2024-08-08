@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, Text, View, StyleSheet, Image, Pressable, ListRenderItem, ScrollView } from 'react-native';
+import { Button, Text, View, StyleSheet, Image, Pressable, ListRenderItem } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -83,13 +83,7 @@ export default GaragesPage;
 const styles = StyleSheet.create({
     garagePage: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
         backgroundColor: "#0D0D0D",
-    },
-    scrollView: {
-        alignItems: 'center',
-        justifyContent: 'center',
     },
     container: {
         flex: 1,

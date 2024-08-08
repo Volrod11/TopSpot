@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, Text, View, StyleSheet, Image, TouchableHighlight, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Animated, PanResponder, FlatList, Keyboard, Dimensions, ListRenderItem } from 'react-native';
+import { Pressable, Text, View, StyleSheet, Image, TouchableHighlight, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Animated, PanResponder, FlatList, Keyboard, Dimensions, ListRenderItem } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -8,6 +8,7 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -16,8 +17,11 @@ const defaultPdp = require('../../../assets/default_pfp.png');
 
 //Type
 type PicturePageRouteProp = RouteProp<RootStackParamList, 'PicturePage'>;
+type PicturePageNavigationProp = StackNavigationProp<RootStackParamList, 'PicturePage'>;
+
 
 type Props = {
+  navigation: PicturePageNavigationProp;
   route: PicturePageRouteProp;
 };
 
@@ -40,6 +44,11 @@ type Comment = {
   comment: string;
 };
 
+type Garage = {
+  id: string;
+  date: string,
+  car_types: string[];
+};
 
 //Const Function
 const getUserIdFromPicture = async (pictureId : string): Promise<Profile | null> => {
@@ -73,7 +82,19 @@ const getUserIdFromPicture = async (pictureId : string): Promise<Profile | null>
   return profileData
 }
 
-const fetchMessagesFromDatabase = async (idPicture : string) => {
+//Garages
+const fetchGaragesFromDatabase = async (idProfile : string) => {
+  if (idProfile) {
+    const { data, error } = await supabase.from("garages").select("id, date, car_types").eq("user_id", idProfile).eq("is_finished", "FALSE");
+    if (error) {
+      console.error("Error fetching garage : ", error);
+    }
+    return(data ?? []);
+  }
+;}
+
+//Comments
+const fetchCommentsFromDatabase = async (idPicture : string) => {
   if (idPicture !== null) {
     const { data, error } = await supabase.from("comments").select("id, comment").eq("picture_id", idPicture);
     if (error) {
@@ -83,7 +104,7 @@ const fetchMessagesFromDatabase = async (idPicture : string) => {
   }
 };
 
-const addMessageToDatabase = async (comment : string, idPicture : string, user : User) => {
+const addCommentToDatabase = async (comment : string, idPicture : string, user : User) => {
   if (idPicture && user) {
     const { data, error } = await supabase
       .from('comments')
@@ -108,15 +129,33 @@ const deletePictureToDatabase = async (picture_id : string) => {
   }
 };
 
-const PicturePage: React.FC<Props> = ({ route }) => {
+//Picture in garage
+const addPictureInGarageToDatabase = async (idPicture : string, idGarage : string, carType : string) => {
+  if (idPicture && idGarage && carType) {
+    const { data, error } = await supabase
+      .from('pictures_in_garages')
+      .insert([{ garage_id : idGarage, picture_id: idPicture, car_type: carType}]);
+
+    if (error) {
+    console.error('Error saving picture in garage data: ' + error.message);
+    }
+  }
+};
+
+const PicturePage: React.FC<Props> = ({ route, navigation }) => {
   const [rowCount, setRowCount] = useState<number | null>(null);
   const [iconName, setIconName] = useState<string>();
   const [iconColor, setIconColor] = useState<string>();
   const [isLiked, setIsLiked] = useState<boolean>();
   const [user, setUser] = useState<User | null>(null);
+  const [garages, setGarages] = useState<Garage[]>([]);
+  const [selectedGarage, setSelectedGarage] = useState<Garage | null>(null);
   const [pictureUserProfile, setPictureUserProfile] = useState<Profile |null>(null);
   const [comment, setComment] = useState<string>('');
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalCommentsVisible, setModalCommentsVisible] = useState(false);
+  const [modalActionsVisible, setModalActionsVisible] = useState(false);
+  const [modalGaragesVisible, setModalGaragesVisible] = useState(false);
+  const [modalGarageVisible, setModalGarageVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [comments, setComments] = useState<{ id: string; comment: string }[]>([])
 
@@ -145,6 +184,7 @@ const PicturePage: React.FC<Props> = ({ route }) => {
       }
       const sessionUser = data.session?.user ?? null;
       setUser(sessionUser);
+      console.log(user);
     };
 
     fetchUser();
@@ -153,6 +193,7 @@ const PicturePage: React.FC<Props> = ({ route }) => {
 
   const deletePictureButton = async () => {
     // Ajouter le message à la base de données
+    navigation.goBack();
     await deletePictureToDatabase(idPicture);
   };
 
@@ -247,17 +288,143 @@ const PicturePage: React.FC<Props> = ({ route }) => {
 
 
 
+  //Modal actions
+  const toggleModalActions = () => {
+    setModalActionsVisible(!modalActionsVisible);
+  };
+
+  const panResponderActions = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => Math.abs(gestureState.dy) > 20,
+      onPanResponderMove: Animated.event([null, { dy: pan }], { useNativeDriver: false }),
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dy > 50) {
+          closeModalActions();
+        } else {
+          Animated.spring(pan, {
+            toValue: 0,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  const closeModalActions = () => {
+    Animated.timing(modalHeight, {
+      toValue: Dimensions.get('window').height,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setModalActionsVisible(false));
+  };
+
+
+  //Modal garages
+  const toggleModalGarages = () => {
+    console.log("c'est ok");
+    
+    
+    const loadGarages = async () => {
+      const fetchedGarages = await fetchGaragesFromDatabase(user.id);
+      setGarages(fetchedGarages);
+    };
+  
+    loadGarages();
+
+    
+    setModalGaragesVisible(!modalGaragesVisible);
+    setModalActionsVisible(!modalActionsVisible);
+    console.log(modalGaragesVisible);
+    
+
+  };
+
+  const panResponderGarages = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => Math.abs(gestureState.dy) > 20,
+      onPanResponderMove: Animated.event([null, { dy: pan }], { useNativeDriver: false }),
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dy > 50) {
+          closeModalGarages();
+        } else {
+          Animated.spring(pan, {
+            toValue: 0,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  const closeModalGarages = () => {
+    Animated.timing(modalHeight, {
+      toValue: Dimensions.get('window').height,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setModalGaragesVisible(false));
+  };
+
+
+  const renderItemGarages: ListRenderItem<Garage> = ({ item }) => (
+    <TouchableOpacity onPress={() => openModalGarage(item)} key={item.id} style={styles.garageItem} >
+      <Text>{item.date}</Text>
+    </TouchableOpacity>
+  );
+
+
+  //Modal Garage
+  const openModalGarage = (garage : Garage) => {
+    setSelectedGarage(garage);
+    console.log(selectedGarage.car_types);
+    
+    setModalGaragesVisible(false)
+    setModalGarageVisible(true);
+  };
+
+  const closeModalGarage = () => {
+    setModalGarageVisible(false);
+  };
+
+  const panResponderGarage = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => Math.abs(gestureState.dy) > 20,
+      onPanResponderMove: Animated.event([null, { dy: pan }], { useNativeDriver: false }),
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dy > 50) {
+          closeModalGarage();
+        } else {
+          Animated.spring(pan, {
+            toValue: 0,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  const choosenCarType = (idPicture : string, idGarage : string, carType : string) => {
+    addPictureInGarageToDatabase(idPicture, idGarage, carType)
+    setModalGarageVisible(false);
+    alert("Le photo a bien été ajouté au Garage !");
+  };
+
+  const renderItemGarage: ListRenderItem<string> = ({ item }) => (
+    <TouchableOpacity key={item} onPress={() => choosenCarType(idPicture, selectedGarage.id, item)} style={styles.buttonCarType}>
+      <Text>{item}</Text>
+    </TouchableOpacity>
+  );
+
 
   //Modal comment
-  const toggleModal = () => {
-    setModalVisible(!modalVisible);
+  const toggleModalComments = () => {
+    setModalCommentsVisible(!modalCommentsVisible);
   };
 
 
 
   useEffect(() => {
     const loadComments = async () => {
-      const fetchedMessages = await fetchMessagesFromDatabase(idPicture);
+      const fetchedMessages = await fetchCommentsFromDatabase(idPicture);
       setComments(fetchedMessages);
     };
 
@@ -284,13 +451,13 @@ const PicturePage: React.FC<Props> = ({ route }) => {
     }).start();
   }, [keyboardHeight]);
 
-  const panResponder = useRef(
+  const panResponderComments = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => Math.abs(gestureState.dy) > 20,
       onPanResponderMove: Animated.event([null, { dy: pan }], { useNativeDriver: false }),
       onPanResponderRelease: (evt, gestureState) => {
         if (gestureState.dy > 50) {
-          closeModal();
+          closeModalComments();
         } else {
           Animated.spring(pan, {
             toValue: 0,
@@ -301,12 +468,12 @@ const PicturePage: React.FC<Props> = ({ route }) => {
     })
   ).current;
 
-  const closeModal = () => {
+  const closeModalComments = () => {
     Animated.timing(modalHeight, {
       toValue: Dimensions.get('window').height,
       duration: 300,
       useNativeDriver: false,
-    }).start(() => setModalVisible(false));
+    }).start(() => setModalCommentsVisible(false));
   };
 
 
@@ -316,16 +483,17 @@ const PicturePage: React.FC<Props> = ({ route }) => {
 
   const handleSubmit = async () => {
     // Ajouter le message à la base de données
-    await addMessageToDatabase(comment, idPicture, user);
+    
+    await addCommentToDatabase(comment, idPicture, user);
 
     // Récupérer les messages depuis la base de données et mettre à jour l'état local
-    const updatedMessages = await fetchMessagesFromDatabase(idPicture);
+    const updatedMessages = await fetchCommentsFromDatabase(idPicture);
     setComments(updatedMessages);
 
     setComment('');
   };
 
-  const renderItem: ListRenderItem<Comment> = ({ item }) => (
+  const renderItemComments: ListRenderItem<Comment> = ({ item }) => (
     <Text key={item.id} style={styles.messageItem}>{item.comment}</Text>
   );
 
@@ -359,8 +527,8 @@ const PicturePage: React.FC<Props> = ({ route }) => {
           {pictureUserProfile ? ( <Image source={pictureUserProfile.avatar_url ? { uri: pictureUserProfile.avatar_url } : defaultPdp} style={{height:30, width:30, borderRadius:50}} />) : null}
           {pictureUserProfile ? ( <Text style={styles.user_name}>{pictureUserProfile.username ? pictureUserProfile.username : 'No username available'}</Text>) : null}
         </View>
-        <TouchableOpacity onPress={deletePictureButton} style={styles.btnNormal}>
-          <Ionicons name="ellipsis-horizontal" size={35} color="white" />
+        <TouchableOpacity onPress={toggleModalActions} style={styles.btnNormal}>
+          <Ionicons name="ellipsis-horizontal" size={30} color="white" />
         </TouchableOpacity>
       </View>
       <View style={styles.imageContainer}>
@@ -370,18 +538,103 @@ const PicturePage: React.FC<Props> = ({ route }) => {
         <TouchableHighlight {...touchProps}>
           <Ionicons name={iconName} size={30} color={iconColor} />
         </TouchableHighlight>
-        <TouchableOpacity onPress={toggleModal} style={styles.btnNormal}>
+        <TouchableOpacity onPress={toggleModalComments} style={styles.btnNormal}>
           <Ionicons name="chatbox-outline" size={30} color="white" />
         </TouchableOpacity>
       </View>
 
+      
+
+
       <Modal
         animationType="slide"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={toggleModal}
+        visible={modalActionsVisible}
+        onRequestClose={toggleModalActions}
       >
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => setModalActionsVisible(false)}>
+          <View style={styles.modalContainer}>
+            <Animated.View
+              style={[
+                styles.modalContentContainer,
+                { height: "30%" },
+                { transform: [{ translateY: pan }] },
+              ]}
+              {...panResponderActions.panHandlers}
+            >
+              <TouchableOpacity onPress={toggleModalGarages} style={styles.btnActions}>
+                <Text>Ajouter à un garage</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={toggleModalComments} style={styles.btnActions}>
+                <Text>Partager</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={deletePictureButton} style={styles.btnActions}>
+                <Text style={{color:"red"}}>Supprimer</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalGaragesVisible}
+        onRequestClose={toggleModalGarages}
+      >
+        <TouchableWithoutFeedback onPress={() => setModalGaragesVisible(false)}>
+          <View style={styles.modalContainer}>
+            <Animated.View
+              style={[
+                styles.modalContentContainer,
+                { height: "70%" },
+                { transform: [{ translateY: pan }] },
+              ]}
+              {...panResponderGarages.panHandlers}
+            >
+              <View style={styles.garagesPage}>
+                <FlatList
+                  data={garages}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderItemGarages}
+                  contentContainerStyle={styles.flat_list}
+                  numColumns={1}
+                />
+              </View>
+            </Animated.View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalGarageVisible}
+        onRequestClose={closeModalGarage}
+      >
+        <TouchableWithoutFeedback onPress={() => setModalGarageVisible(false)}>
+          <View style={styles.modalGarageContainer}>
+              <View style={styles.garagePage}>
+                <FlatList
+                  data={selectedGarage?.car_types}
+                  keyExtractor={(item) => item}
+                  renderItem={renderItemGarage}
+                  contentContainerStyle={styles.flat_list}
+                  scrollEnabled={false}
+                  numColumns={2}
+                />
+              </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+      
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalCommentsVisible}
+        onRequestClose={toggleModalComments}
+      >
+        <TouchableWithoutFeedback onPress={() => setModalCommentsVisible(false)}>
           <View style={styles.modalContainer}>
             <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -393,14 +646,14 @@ const PicturePage: React.FC<Props> = ({ route }) => {
                   { height: modalHeight },
                   { transform: [{ translateY: pan }] },
                 ]}
-                {...panResponder.panHandlers}
+                {...panResponderComments.panHandlers}
               >
                 <TouchableWithoutFeedback>
                   <View style={styles.modalContent}>
                     <FlatList
                       data={comments}
                       keyExtractor={(item) => item.id}
-                      renderItem={renderItem}
+                      renderItem={renderItemComments}
                       style={styles.messagesList}
                     />
                     <View style={styles.inputContainer}>
@@ -463,6 +716,16 @@ const styles = StyleSheet.create({
       width: 35,
       height: 35,
     },
+    btnActions: {
+      width: "90%",
+      height: 45,
+      backgroundColor: "rgb(240,240,240)",
+      margin: 5,
+      borderRadius: 7,
+      alignSelf: "center",
+      justifyContent: "center",
+      alignItems: "center",
+    },
     picture_actions : {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -507,7 +770,6 @@ const styles = StyleSheet.create({
   modalContentContainer: {
     backgroundColor: '#fff',
     paddingTop: 20,
-    
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: '#000',
@@ -564,5 +826,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#fff",
   },
+  garageItem: {
+    height: 50,
+    width: 330,
+    backgroundColor: "rgb(220,220,220)",
+    margin: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 5,
+  },
+  garagesPage: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+  },
+  flat_list: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: "center",
+  },
+  modalGarageContainer: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  garagePage: {
+    height: 260,
+    width: 260,
+    alignSelf: "center",
+    alignContent: "center",
+    backgroundColor: "white",
+    borderRadius: 15,
+  },
+  buttonCarType: {
+    height: 110,
+    width: 110,
+    margin: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor:  "rgb(220,220,220)",
+    borderRadius: 10,
+  }
 
 });

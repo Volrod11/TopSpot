@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import PicturesPage from '../HomeComponent/pages/PicturesPage';
+import PicturePage from '../HomeComponent/pages/PicturePage';
 import TestPage from '../HomeComponent/pages/PicturePage';
 
 import MonthlyGarage from '../HomeComponent/pictureComponents/MonthlyGarage';
@@ -36,31 +37,10 @@ const HomeStack = createNativeStackNavigator();
 
 export default function HomeStackScreen() {
   return (
-    <HomeStack.Navigator screenOptions={{
-        headerShown: false
-    }} >
+    <HomeStack.Navigator screenOptions={{headerShown: false }} >
       <HomeStack.Screen name="HomeScreen" component={HomeScreen} />
-      <HomeStack.Screen name="PicturesPage" component={PicturesPage} options={{
-        headerShown: true,
-        headerBackTitle: 'Back',
-        headerStyle: {
-            backgroundColor: '#000000',
-        },
-        headerTitleStyle: {
-            color: '#fff',
-        },
-        }}/>
-      <HomeStack.Screen name="TestPage" component={TestPage} options={{
-        headerShown: true,
-        headerBackTitle: 'Back',
-        headerStyle: {
-            backgroundColor: '#000000',
-        },
-        headerTitleStyle: {
-            color: '#fff',
-        },
-        }}/>
-
+      <HomeStack.Screen name="PicturesPage" component={PicturesPage} initialParams={{user_id: null}} options={{headerShown: true }}/>
+      <HomeStack.Screen name="PicturePage" component={PicturePage} options={{headerShown: true }} />
     </HomeStack.Navigator>
   );
 }

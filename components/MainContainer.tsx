@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Session } from '@supabase/supabase-js'
+import ProfileScreenNavigator from './navigations/ProfileScreenNavigator';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -13,7 +14,7 @@ import HomeStackScreen from './screens/HomeScreen';
 import GarageScreen from './screens/GarageScreen';
 import CameraScreen from './screens/CameraScreen';
 import MapScreen from './screens/MapScreen';
-import ProfileScreen from './screens/ProfileScreen';
+import ProfileScreenStack from './screens/ProfileScreen';
 
 //Screen names
 const homeName = "Home";
@@ -78,7 +79,7 @@ function MainContainer({ session }: { session: Session }) {
             <Tab.Screen name={garageName} component={GarageScreen} />
             <Tab.Screen name={cameraName} component={CameraScreen} initialParams={{ user_id: session.user.id }}/>
             <Tab.Screen name={mapName} component={MapScreen} />
-            <Tab.Screen name={profileName} component={ProfileScreen}  />
+            <Tab.Screen name={profileName} component={ProfileScreenNavigator} initialParams={{ user_id: session.user.id }} />
             
 
         </Tab.Navigator>
@@ -95,12 +96,6 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    cameraButton: {
-      backgroundColor: 'tomato',
-      borderRadius: 50,
-      padding: 10,
-      marginBottom: 20,
     },
   });
 

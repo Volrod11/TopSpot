@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Swiper from 'react-native-swiper';
 
@@ -16,7 +17,7 @@ type CameraScreenRouteProp = RouteProp<RootStackParamList, 'TabScreen'>;
 
 type Props = {
     route: CameraScreenRouteProp;
-  };
+};
 
 
 
@@ -24,7 +25,7 @@ type Props = {
 const addPictureToDatabase = async (picture : string, userId : string) => {
     if (picture && userId) {
       const { data, error } = await supabase
-        .from('comments')
+        .from('pictures')
         .insert([{ user_id : userId, picture: picture }]);
   
       if (error) {
@@ -39,6 +40,7 @@ const CameraScreen: React.FC<Props> = ({ route }) => {
   const [facing, setFacing] = useState<CameraType>('back');
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  const [currentPhoto, setCurrentPhoto] = useState<string |null>(null);
 
   const navigation = useNavigation();
   const user_id = route.params.user_id;
@@ -62,39 +64,55 @@ const CameraScreen: React.FC<Props> = ({ route }) => {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   }
 
+  function closeCamera() {
+    navigation.goBack();
+    setPhotos([]);
+  }
+
   const renderThumbnail = ({ item }: { item: string }) => (
-    <TouchableOpacity onPress={() => setSelectedPhotoIndex(photos.indexOf(item))}>
+    <TouchableOpacity onPress={() => {
+        setSelectedPhotoIndex(photos.indexOf(item));
+        setCurrentPhoto(item); 
+    }} style={styles.imageContainer}>
       <Image source={{ uri: item }} style={styles.thumbnail} />
     </TouchableOpacity>
   );
 
-  const handleLogAndRedirect = async (photoUri: string) => {
-    await addPictureToDatabase(photoUri, user_id);
-    // Here, you might want to save the photo URI to a database or handle it as needed.
-    
-    // Navigate to the "SettingsScreen"
-    navigation.goBack();
+  const handleLogAndRedirect = async () => {
+    if (currentPhoto) {
+        await addPictureToDatabase(currentPhoto, user_id);
+        setPhotos([]);
+        setSelectedPhotoIndex(null);
+    }   
   };
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
-        <View style={styles.buttonContainer}>
-            <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => navigation.goBack()}
-            >
-                <Ionicons name="close" size={60} color="white" />
-            </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.flipButton}
-            onPress={toggleCameraFacing}
-          >
-            <Text style={styles.text}>Flip</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.snapButton} onPress={takePicture}/>
-        </View>
-      </CameraView>
+        <View style={styles.cameraContainer}>
+            <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={closeCamera}
+                    >
+                        <Ionicons name="close" size={30} color="white" />
+                    </TouchableOpacity>
+                    <View style={styles.bottomButtonContainer}>
+                        <View style={styles.snapButtonWrapper}>
+                            <TouchableOpacity style={styles.snapButton} onPress={takePicture} >
+                                <Ionicons name="radio-button-on" size={100} color="rgba(255,255,255,0.8)" />  
+                            </TouchableOpacity>
+                        </View>
+                        <TouchableOpacity
+                            style={styles.flipButton}
+                            onPress={toggleCameraFacing}
+                        >
+                            <MaterialCommunityIcons name="camera-flip-outline" size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </CameraView>
+      </View>
       {photos.length > 0 && (
         <View style={styles.thumbnailContainer}>
           <FlatList
@@ -116,27 +134,31 @@ const CameraScreen: React.FC<Props> = ({ route }) => {
             <Swiper
               loop={false}
               index={selectedPhotoIndex}
-              onIndexChanged={index => setSelectedPhotoIndex(index)}
+              onIndexChanged={index => {
+                setSelectedPhotoIndex(index);
+                setCurrentPhoto(photos[index]);
+            }}
               showsPagination={false}
             >
               {photos.map(photo => (
                 <View key={photo} style={styles.fullScreenContainer}>
                   <Image source={{ uri: photo }} style={styles.fullScreenImage} resizeMode='contain' />
-                  <TouchableOpacity
-                    style={styles.modalCloseButton}
-                    onPress={() => setSelectedPhotoIndex(null)}
-                  >
-                    <Ionicons name="close" size={60} color="white" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalLogButton}
-                    onPress={() => handleLogAndRedirect(photo)}
-                  >
-                    <Text style={styles.text}>Log</Text>
-                  </TouchableOpacity>
                 </View>
               ))}
             </Swiper>
+            <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setSelectedPhotoIndex(null)}
+            >
+                <Ionicons name="close" size={30} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.modalLogButton}
+                onPress={handleLogAndRedirect}
+            >
+                <Text style={styles.text}>Add picture</Text>
+                <Ionicons name="arrow-forward" size={24} color="white" />
+            </TouchableOpacity>
           </View>
         </Modal>
       )}
@@ -149,38 +171,59 @@ export default CameraScreen;
 const styles = StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: '#0D0D0D'
+    },
+    cameraContainer: {
+        alignSelf: 'center',
+        width: "95%",
+        height: "80%",
+        marginTop: 50,
+        borderRadius: 20,
+        overflow: "hidden",
     },
     camera: {
-      flex: 1,
+        flex: 1,
     },
     buttonContainer: {
       flex: 1,
       flexDirection: 'column',
       justifyContent: 'space-between',
       margin: 20,
+      marginBottom: 0,
     },
     closeButton: {
-        height: 60,
-        width: 60,
-        borderRadius: 50,
+        height: 30,
+        width: 30,
+        marginTop: 2,
         alignSelf: 'flex-end',
         alignItems: 'center',
-        backgroundColor: 'red',
+    },
+    bottomButtonContainer: {
+        position: 'absolute',
+        bottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
     },
     flipButton: {
-      flex: 0.1,
-      alignSelf: 'flex-end',
-      alignItems: 'center',
+        height: 40,
+        width: 40,
+        borderRadius: 20,
+        backgroundColor: "rgba(100,100,100,0.6)",
+        position: 'absolute',
+        right: width / 5 - 40, // Adjust this value if necessary
+        justifyContent: "center",
+        alignItems : "center",
+    },
+    snapButtonWrapper: {
+        flex: 1,
+        alignItems: 'center',
     },
     snapButton: {
-        height: 60,
-        width: 60,
-        borderRadius: 50,
-        alignSelf: 'center',
+        height: 100,
+        width: 100,
         alignItems: 'center',
-        backgroundColor: 'white',
-        padding: 10,
-        
     },
     text: {
       fontSize: 18,
@@ -188,14 +231,24 @@ const styles = StyleSheet.create({
     },
     thumbnailContainer: {
       position: 'absolute',
-      bottom: 80,
-      left: 10,
+      bottom: 0,
+      left: 20,
       right: 10,
       height: 100,
     },
+    imageContainer:
+    {
+        alignItems: "center",
+        justifyContent: "center",
+        height:47,
+        width:47,
+        backgroundColor:"white",
+        borderRadius: 5,
+        margin: 5,
+    },
     thumbnail: {
-      width: 60,
-      height: 60,
+      width: 45,
+      height: 45,
       margin: 5,
       borderRadius: 5,
     },
@@ -209,29 +262,32 @@ const styles = StyleSheet.create({
       alignItems: 'center',
     },
     fullScreenContainer: {
-      flex: 1,
-      width: width,
-      height: height,
-      justifyContent: 'center',
-      alignItems: 'center',
+        alignSelf: 'center',
+        width: "95%",
+        height: "80%",
+        marginTop: 50,
+        borderRadius: 20,
+        overflow: "hidden",
     },
     fullScreenImage: {
-      width: width,
-      height: height,
+      flex: 1,
     },
     modalCloseButton: {
       position: 'absolute',
-      top: 20,
+      top: 50,
       right: 20,
-      backgroundColor: 'red',
       borderRadius: 50,
+      marginTop: 20,
     },
     modalLogButton: {
       position: 'absolute',
-      bottom: 20,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      bottom: 45,
       right: 20,
-      backgroundColor: 'green',
-      padding: 10,
+      backgroundColor: '#ffe100',
+      paddingVertical: 10,
+      paddingHorizontal: 13,
       borderRadius: 50,
     },
   });

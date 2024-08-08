@@ -29,6 +29,8 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
   const navigation = useNavigation<PicturesPageNavigationProp>();
   
   const goToPicturePages = (idPicture : string, picture: string) => {
+    console.log(navigation);
+    
     navigation.navigate('PicturePage', { idPicture : idPicture, picture : picture });
   };
 
@@ -71,7 +73,6 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         numColumns={3}
-
       />
       <StatusBar style="auto" />
     </View>
