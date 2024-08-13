@@ -23,24 +23,31 @@ type Props = {
 };
 
 //Const Function
-const getNumberOfPicturesFromGarage = async (garage_id : string) => {
+const getMostLikedPictureFromGarage = async (garage_id : string) => {
     if (garage_id) {
         const { count, error } = await supabase
-        .from("pictures_in_garages")
-        .select('*', { count: 'exact', head: true })
-        .eq("garage_id", garage_id);
+        .from('pictures_in_garages')
+        .select('picture_id, pictures:liked_picture(count)', { count: 'exact' })
+        .eq('garage_id', garage_id)
+
         if (error) {
             console.error("Error getting count picture from garage : ", error);
         }
+        console.log(garage_id);
+        
+        console.log("count", count);
+        
         return(count);
     }
 };
 
 
+
+
 const Garage: React.FC<Props> = ({ garage_id }) => {
     const navigation = useNavigation<GarageNavigationProp>();
 
-    const [picturesCount, setPicturesCount] = useState<number>();
+    const [picturesCount, setPicturesCount] = useState<null | number>(null);
 
     const goToGaragePage = (garage_id : string) => {
         navigation.navigate('GaragePage', { garage_id : garage_id });
@@ -48,11 +55,14 @@ const Garage: React.FC<Props> = ({ garage_id }) => {
 
     useEffect(() => {
         const loadPictureCount = async () => {
-            const loadedPicturesCount = await getNumberOfPicturesFromGarage(garage_id);
+            const loadedPicturesCount = await getMostLikedPictureFromGarage(garage_id);
             setPicturesCount(loadedPicturesCount);
         };
+        
+        
 
         loadPictureCount();
+        console.log("picturesCount",picturesCount);
     }, []);
 
     return (
