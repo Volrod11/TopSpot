@@ -1,15 +1,11 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Button, Text, View, StyleSheet, Image, Pressable, ImageBackground, ScrollView, FlatList, ListRenderItem  } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, StyleSheet, Image, Pressable, FlatList, ListRenderItem  } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useState, useEffect } from 'react'
 import { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../../../lib/supabase';
 import { RootStackParamList } from '../../../types';
-import { StackScreenProps } from '@react-navigation/stack';
 
 type PicturesPageProps  = {
   user_id?: string;
@@ -70,6 +66,9 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
         data={pictures}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={21}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         numColumns={3}

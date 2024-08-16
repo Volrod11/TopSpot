@@ -22,22 +22,101 @@ type Props = {
     garage_id: string;
 };
 
-//Const Function
-const getMostLikedPictureFromGarage = async (garage_id : string) => {
-    if (garage_id) {
-        const { count, error } = await supabase
-        .from('pictures_in_garages')
-        .select('picture_id, pictures:liked_picture(count)', { count: 'exact' })
-        .eq('garage_id', garage_id)
+interface GarageData {
+  pictureUrl: string;
+  nbPictures: number;
+  nbLikes: number;
+}
 
-        if (error) {
-            console.error("Error getting count picture from garage : ", error);
+
+//Const Function
+const getMostLikedPictureUrl = async (garageId: string): Promise<GarageData | null> => {
+    try {
+      // 1. Obtenez toutes les pictures_id dans le garage spécifié
+      const { data: garagePictures, error: garageError } = await supabase
+        .from('pictures_in_garages')
+        .select('picture_id')
+        .eq('garage_id', garageId)
+        .order('created_at', {ascending: true});
+
+      if (garageError || !garagePictures) {
+        console.error("Erreur lors de la récupération des photos du garage:", garageError);
+        return null;
+      }
+    
+
+      // Extrait les IDs des pictures
+      const pictureIds = garagePictures.map(p => p.picture_id);
+      const nbPictures = pictureIds.length;
+
+      if (nbPictures === 0) {
+        console.log("Aucune photo trouvée pour ce garage.");
+      }
+
+      // 2. Récupérez tous les likes pour les photos spécifiées
+      console.log("pictureIds",pictureIds);
+      
+      const { data: allLikes, error: likesError } = await supabase
+        .from('liked_pictures')
+        .select('picture_id')
+        .in('picture_id', pictureIds);
+
+      console.log("allLikes", allLikes);
+      
+      
+      if (likesError || !allLikes) {
+        console.error("Erreur lors de la récupération des likes:", likesError);
+        return null;
+      }
+
+      const nbLikes = allLikes.length
+      let mostLikedPictureId: string;
+      
+      if (nbLikes === 0) {
+        mostLikedPictureId = pictureIds[0];
+      }
+      else {
+        // Comptez le nombre de likes pour chaque picture_id
+        const likeCounts: Record<string, number> = {};
+        allLikes.forEach(like => {
+          if (likeCounts[like.picture_id]) {
+            likeCounts[like.picture_id]++;
+          } else {
+            likeCounts[like.picture_id] = 1;
+          }
+        });
+
+        // Trouvez l'ID de la photo avec le plus de likes
+        mostLikedPictureId = Object.keys(likeCounts)
+          .reduce((a, b) => likeCounts[a] > likeCounts[b] ? a : b, '-1');
+
+          
+
+        if (mostLikedPictureId === '-1') {
+          console.log("Aucune photo likée trouvée.");
+          return null;
         }
-        console.log(garage_id);
-        
-        console.log("count", count);
-        
-        return(count);
+      }
+
+
+      
+
+      // 3. Obtenez l'URL de la photo la plus likée
+      const { data: pictureData, error: pictureError } = await supabase
+        .from('pictures')
+        .select('picture')
+        .eq('id', mostLikedPictureId)
+        .single();
+
+      if (pictureError || !pictureData) {
+        console.error("Erreur lors de la récupération de l'URL de la photo:", pictureError);
+        return null;
+      }
+
+      return {pictureUrl : pictureData.picture, nbPictures : nbPictures, nbLikes : nbLikes};
+    } catch (error) {
+      console.error("Erreur inattendue:", error);
+      return null;
     }
 };
 
@@ -47,40 +126,39 @@ const getMostLikedPictureFromGarage = async (garage_id : string) => {
 const Garage: React.FC<Props> = ({ garage_id }) => {
     const navigation = useNavigation<GarageNavigationProp>();
 
-    const [picturesCount, setPicturesCount] = useState<null | number>(null);
+    const [mostLikedPictureUrl, setMostLikedPictureUrl] = useState<null | string>(null);
+    const [nbPictures, setNbPictures] = useState<number | null>(null);
+    const [nbLikes, setNbLikes] = useState<null | number>(null);
 
     const goToGaragePage = (garage_id : string) => {
         navigation.navigate('GaragePage', { garage_id : garage_id });
     };
 
     useEffect(() => {
-        const loadPictureCount = async () => {
-            const loadedPicturesCount = await getMostLikedPictureFromGarage(garage_id);
-            setPicturesCount(loadedPicturesCount);
+        const fetchMostLikedPicture = async () => {
+          const garageData = await getMostLikedPictureUrl(garage_id);
+          setMostLikedPictureUrl(garageData.pictureUrl);
+          setNbPictures(garageData.nbPictures);
+          setNbLikes(garageData.nbLikes);
         };
-        
-        
-
-        loadPictureCount();
-        console.log("picturesCount",picturesCount);
-    }, []);
+    
+        fetchMostLikedPicture();
+      }, []);
 
     return (
         <View style={styles.container}>
             <Pressable onPress={() => goToGaragePage(garage_id)} style={{height: "100%", width: "100%",}}>
-                {picturesCount === 0 ? (
-                    <Text>C'est vide</Text>
-                ) : (
+                {mostLikedPictureUrl ? (
                     <View style={{flex : 1}}>
-                    <Image source={PlaceholderImage} style={styles.picture}/>
+                    <Image source={{ uri: mostLikedPictureUrl }} style={styles.picture}/>
                         <View style={styles.footer}>
                             <View style={styles.info_garage}>
                                 <Ionicons name="car-sport-outline" size={20} color="rgb(150,150,150)" />
-                                <Text style={styles.info_number}>4</Text>
+                                <Text style={styles.info_number}>{nbPictures}</Text>
                             </View>
                             <View style={styles.info_garage}>
                                 <Ionicons name="heart-outline" size={20} color="rgb(150,150,150)" />
-                                <Text style={styles.info_number}>3.5k</Text>
+                                <Text style={styles.info_number}>{nbLikes}</Text>
                             </View>
                             <View style={styles.info_garage}>
                                 <Ionicons name="chatbox-outline" size={20} color="rgb(150,150,150)" />
@@ -88,6 +166,8 @@ const Garage: React.FC<Props> = ({ garage_id }) => {
                             </View>
                         </View>
                     </View>
+                ) : (
+                    <Text>C'est vide</Text>
                 )}
             </Pressable>
         </View>

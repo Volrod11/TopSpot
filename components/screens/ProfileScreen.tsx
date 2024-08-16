@@ -1,24 +1,22 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { Session } from '@supabase/supabase-js';
-
-import PicturePage from '../HomeComponent/pages/PicturePage';
-import TabViewProfile from '../HomeComponent/useComponent/TabViewProfile';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { ProfileScreenStackParamList } from '../../types';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { RouteProp } from '@react-navigation/native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+
+import TabViewProfile from '../HomeComponent/useComponent/TabViewProfile';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const defaultPdp = require('../../assets/default_pfp.png');
 const Tab = createStackNavigator<RootStackParamList>();
 
 // Type
 type ProfileScreenRouteProp = RouteProp<ProfileScreenStackParamList, 'ProfileScreen'>;
-
-type ProfileScreenProps = StackScreenProps<RootStackParamList, 'ProfileScreen'>;
+type SettingsNavigationProp = StackNavigationProp<ProfileScreenStackParamList, 'Settings'>;
 
 type RootStackParamList = {
     ProfileScreen: { user_id: string };
@@ -54,13 +52,11 @@ const getUsernameAndAvatarUrlFromProfiles = async (profile_id: string): Promise<
     return profileData;
 }
 
-const ProfileScreen: React.FC<{ route: ProfileScreenRouteProp}> = ({ route }) => {
+const ProfileScreen: React.FC<{ route: ProfileScreenRouteProp }> = ({ route }) => {
     const { user_id } = route.params; 
-    const [user, setUser] = useState<User | null>(null);
     const [userProfile, setUserProfile] = useState<Profile | null>(null);
 
-    console.log(user_id);
-    
+    const navigation = useNavigation<SettingsNavigationProp>();
 
     useEffect(() => {
         if (user_id) {
@@ -73,8 +69,17 @@ const ProfileScreen: React.FC<{ route: ProfileScreenRouteProp}> = ({ route }) =>
         }
     }, [user_id]);
 
+    const goToSettings= () => {
+        navigation.navigate('Settings');
+    };
+
     return (
         <View style={styles.profile_page}>
+            <View style={styles.topButtons}>
+                <TouchableOpacity onPress={goToSettings} style={styles.btnNormal}>
+                    <Ionicons name="ellipsis-horizontal" size={30} color="white" />
+                </TouchableOpacity>
+            </View>
             <View style={styles.info_user}>
                 <View style={styles.profile_image}>
                     {userProfile ? ( <Image source={userProfile.avatar_url ? { uri: userProfile.avatar_url } : defaultPdp} style={styles.image} />) : null}
@@ -96,6 +101,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#0D0D0D",
     },
+    topButtons: {
+        flex:0.15,
+        marginTop: 30,
+        flexDirection: "row-reverse",
+        alignItems: "center",
+    },
     text: {
         fontSize: 26,
         fontWeight: 'bold',
@@ -112,9 +123,8 @@ const styles = StyleSheet.create({
         borderRadius: 100,
     },
     info_user: {
-        marginTop: 50,
-        height: 250,
-        justifyContent: 'center', // Centered vertically
+        flex: 0.6,
+        justifyContent: 'center',
         alignItems: 'center',
     },
     user_name: {
@@ -127,5 +137,10 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: "rgb(200,200,200)",
         width: "100%",
-    }
+    },
+    btnNormal: {
+        width: 35,
+        height: 35,
+        marginRight: 10,
+    },
 });

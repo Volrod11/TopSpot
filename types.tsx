@@ -16,4 +16,6 @@ export type RootStackParamList2 = {
 export type ProfileScreenStackParamList = {
     ProfileScreen: { user_id: string };
     PicturePage: { idPicture: string, picture: string };
+    GaragePage: { garage_id: string };
+    Settings: undefined;
 };

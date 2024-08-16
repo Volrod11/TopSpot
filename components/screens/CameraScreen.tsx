@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, FlatList, Modal } from 'react-native';
+import { View, Text, Button,StyleSheet, TouchableOpacity, Image, Dimensions, FlatList, Modal } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+import recognizeModel from '../../api/carRecognition/carRecognitionApi';
 import Swiper from 'react-native-swiper';
 
 const { width, height } = Dimensions.get('window');
@@ -57,7 +58,13 @@ const CameraScreen: React.FC<Props> = ({ route }) => {
     return <View />;
   }
   if (!permission.granted) {
-    return <Text>No access to camera</Text>;
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.containerPerm}>
+        <Text>We need your permission to show the camera</Text>
+        <Button onPress={requestPermission} title="grant permission" />
+      </View>
+    );
   }
 
   function toggleCameraFacing() {
@@ -85,6 +92,8 @@ const CameraScreen: React.FC<Props> = ({ route }) => {
         setSelectedPhotoIndex(null);
     }   
   };
+
+
 
   return (
     <View style={styles.container}>
@@ -169,6 +178,11 @@ const CameraScreen: React.FC<Props> = ({ route }) => {
 export default CameraScreen;
 
 const styles = StyleSheet.create({
+    containerPerm: {
+      flex: 1,
+      justifyContent: 'center',
+      alignContent: "center",
+    },
     container: {
       flex: 1,
       backgroundColor: '#0D0D0D'
