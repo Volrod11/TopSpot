@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
         height : 90,
         width : "100%",
         backgroundColor : "rgba(0,0,0,0.42)",
-        padding : "40px",
+        padding : 2,
         position: "absolute",
         bottom: 0,
     },
