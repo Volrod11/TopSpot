@@ -1,4 +1,4 @@
-import { StatusBar } from 'expo-status-bar';
+/*import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 //import { supabase } from '/utils/supabase'
 //U3Em!zz@ScH2nXm

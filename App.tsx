@@ -20,6 +20,24 @@ export default function App() {
     supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
+
+    // Connexion WebSocket ici
+    const ws = new WebSocket('wss://example.com');
+    ws.onopen = () => {
+      console.log('WebSocket connecté');
+    };
+    ws.onmessage = (event) => {
+      console.log('Message reçu:', event.data);
+    };
+    ws.onerror = (e) => {
+      console.log('Erreur WebSocket:', e);
+    };
+    ws.onclose = () => {
+      console.log('WebSocket fermé');
+    };
+
+    // Nettoyage à la destruction du composant
+    return () => ws.close();
   }, [])
 
   return (
@@ -31,7 +49,6 @@ export default function App() {
     </GestureHandlerRootView>
   )
 }
-
 
 const styles = StyleSheet.create({
   container: {
