@@ -5,16 +5,25 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../types';
+import { CameraScreenStackParamList } from '../../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+
 
 import recognizeModel from '../../api/carRecognition/carRecognitionApi';
 import Swiper from 'react-native-swiper';
 
+const Tab = createStackNavigator<RootStackParamList>();
 const { width, height } = Dimensions.get('window');
 
 //Type
-type CameraScreenRouteProp = RouteProp<RootStackParamList, 'TabScreen'>;
+type CameraScreenRouteProp = RouteProp<CameraScreenStackParamList, 'CameraScreen'>;
+type CameraScreenNavigationProp = StackNavigationProp<CameraScreenStackParamList, 'PhotoDetailsScreen'>;
+
+type RootStackParamList = {
+    CameraScreen: { user_id: string };
+    PhotoDetailsScreen: { picture: string, user_id: string };
+}
 
 type Props = {
     route: CameraScreenRouteProp;
@@ -36,16 +45,29 @@ const addPictureToDatabase = async (picture : string, userId : string) => {
   };
 
 
-const CameraScreen: React.FC<Props> = ({ route }) => {
+const CameraScreen: React.FC<{ route: CameraScreenRouteProp }> = ({ route }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [currentPhoto, setCurrentPhoto] = useState<string |null>(null);
 
-  const navigation = useNavigation();
-  const user_id = route.params.user_id;
+  const navigation = useNavigation<CameraScreenNavigationProp>();
+  const { user_id } = route.params;
+  console.log(user_id);
+  
   const cameraRef = useRef<CameraView>(null);
+
+  const fetchMarques = async () => {
+    const { data, error } = await supabase
+    .from('voitures')
+    .select('marque', { count: 'exact', head: false })
+    .order('marque', { ascending: true })
+    .neq('marque', null);
+
+    const unique = [...new Set(data.map(row => row.marque))];
+    return unique;
+  }
 
   const takePicture = async () => {
     if (cameraRef.current) {
@@ -87,10 +109,16 @@ const CameraScreen: React.FC<Props> = ({ route }) => {
 
   const handleLogAndRedirect = async () => {
     if (currentPhoto) {
+      navigation.navigate('PhotoDetailsScreen', { picture: currentPhoto, user_id: user_id });
+      setPhotos([]);
+      setSelectedPhotoIndex(null);
+    }
+    
+    /*if (currentPhoto) {
         await addPictureToDatabase(currentPhoto, user_id);
         setPhotos([]);
         setSelectedPhotoIndex(null);
-    }   
+    }   */
   };
 
 

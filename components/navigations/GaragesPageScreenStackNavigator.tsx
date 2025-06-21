@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import GaragesPage from '../HomeComponent/pages/GaragesPage'; // Assurez-vous que le chemin est correct
-import GaragePage from '../HomeComponent/pages/GaragePage'; // Assurez-vous que le chemin est correct
+import GaragesPage from '../HomeComponent/pages/GaragesPage';
+import GaragePage from '../HomeComponent/pages/GaragePage'; 
 
 const Stack = createStackNavigator();
 

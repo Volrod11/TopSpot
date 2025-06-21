@@ -19,3 +19,8 @@ export type ProfileScreenStackParamList = {
     GaragePage: { garage_id: string };
     Settings: undefined;
 };
+
+export type CameraScreenStackParamList = {
+    CameraScreen: { user_id: string };
+    PhotoDetailsScreen: { picture: string, user_id: string };
+};
