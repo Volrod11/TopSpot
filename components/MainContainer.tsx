@@ -15,6 +15,7 @@ import GarageScreen from './screens/GarageScreen';
 import CameraScreen from './screens/CameraScreen';
 import MapScreen from './screens/MapScreen';
 import ProfileScreenStack from './screens/ProfileScreen';
+import CameraScreenNavigation from './navigations/CameraScreenNavigation';
 
 //Screen names
 const homeName = "Home";
@@ -26,6 +27,7 @@ const profileName = "Profile";
 const Tab = createBottomTabNavigator();
 
 function MainContainer({ session }: { session: Session }) {
+    
   return (
     <NavigationContainer>
         <Tab.Navigator 
@@ -77,7 +79,7 @@ function MainContainer({ session }: { session: Session }) {
 
             <Tab.Screen name={homeName} component={HomeStackScreen}/>
             <Tab.Screen name={garageName} component={GarageScreen} />
-            <Tab.Screen name={cameraName} component={CameraScreen} initialParams={{ user_id: session.user.id }}/>
+            <Tab.Screen name={cameraName} component={CameraScreenNavigation} initialParams={{ user_id: session.user.id }}/>
             <Tab.Screen name={mapName} component={MapScreen} />
             <Tab.Screen name={profileName} component={ProfileScreenNavigator} initialParams={{ user_id: session.user.id }} />
             
