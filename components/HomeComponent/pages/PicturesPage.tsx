@@ -24,9 +24,7 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
 
   const navigation = useNavigation<PicturesPageNavigationProp>();
   
-  const goToPicturePages = (idPicture : string, picture: string) => {
-    console.log(navigation);
-    
+  const goToPicturePages = (idPicture : string, picture: string) => {    
     navigation.navigate('PicturePage', { idPicture : idPicture, picture : picture });
   };
 
@@ -37,22 +35,24 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
         if (error) {
           console.error("Error fetching pictures: ", error);
         }
-
+        
         setPictures(data ?? []);
       } else if(user_id !== null) {
         const { data, error } = await supabase.from("pictures").select("id, picture").eq('user_id', user_id);
         if (error) {
           console.error("Error fetching pictures: ", error);
         }
-
         setPictures(data ?? []);
       }
-      
     }
 
     getPicturesFromUser();
   }, []);
   
+
+  useEffect(() => {
+    console.log("Pictures fetched: ", pictures);
+  }, [pictures]);
 
   const renderItem: ListRenderItem<Picture> = ({ item }) => (
     <Pressable key={item.id} onPress={() => goToPicturePages(item.id, item.picture)} style={styles.bouton}>
@@ -91,12 +91,13 @@ const styles = StyleSheet.create({
   bouton: {
     flex: 1/3,
     margin: 1,
+    aspectRatio: 1, // carré
     alignItems: 'center',
     justifyContent: 'center',
   },
   image: {
     width: '100%',
-    height: 140,
+    height: '100%',
     resizeMode: 'cover',
   },
   

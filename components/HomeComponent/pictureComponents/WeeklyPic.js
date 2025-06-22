@@ -6,6 +6,7 @@ const PlaceholderImage = require('../../../assets/images/F150.png');
 
 export default function WeeklyPic({ }) {
     const navigation = useNavigation();
+    
     return (
         <View style={styles.container}>
             <Pressable onPress={() => navigation.navigate("PicturesPage", {idImage : PlaceholderImage})} style={{height: 500, width: 350,}}>
