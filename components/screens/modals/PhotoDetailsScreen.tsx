@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, Modal } from 'react-native';
 import { CameraScreenStackParamList, RootStackParamList } from "../../../types";
 import { Picker } from '@react-native-picker/picker';
 import { RouteProp } from "@react-navigation/native";
@@ -15,43 +15,102 @@ type Props = {
 };
 
 //Base de données
-const fetchMarques = async () => {
+const fetchBrands = async () => {
     const { data, error } = await supabase
     .from('voitures')
     .select('marque', { count: 'exact', head: false })
     .order('marque', { ascending: true })
     .neq('marque', null);
 
+    if (error) {
+    console.error("Erreur Supabase:", error);
+    return [];
+    }
+
     const unique = [...new Set(data.map(row => row.marque))];
+    
+    return unique;
+}
+
+const fetchModels = async (marque : string) => {
+    const { data, error } = await supabase
+    .from('voitures')
+    .select('modele', { count: 'exact', head: false })
+    .eq('marque', marque)
+    .order('modele', { ascending: true })
+    .neq('modele', null);
+
+    if (error) {
+        console.error("Erreur Supabase:", error);
+        return [];
+    }
+
+    const unique = [...new Set(data.map(row => row.modele))];
+    
     return unique;
 }
 
 const PhotoDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
+    const [modalBrandsVisible, setModalBrandsVisible] = React.useState<boolean>(false);
+    const [modalModelsVisible, setModalModelsVisible] = React.useState<boolean>(false);
+    const [selectedBrand, setSelectedBrand] = React.useState<string>('');
     const [selectedModel, setSelectedModel] = React.useState<string>('');
+    const [brand, setBrands] = React.useState<string[]>([]);
     const [models, setModels] = React.useState<string[]>([]);
-
+    console.log("Current photo : ", route.params.picture);
+    
 
     useEffect(() => {
-        const loadModels = async () => {
-            const result = await fetchMarques();
+        const loadBrands = async () => {
+            const result = await fetchBrands();
+            setBrands(result);
+        };
+        loadBrands();
+    },[]);
+
+    useEffect(() => {
+        const loadModeles = async (marque : string) => {
+            const result = await fetchModels(marque);
             setModels(result);
         };
-        loadModels();
+        loadModeles(selectedBrand);
     },[]);
 
     return (
         <View style={styles.container}>
-            <Image source={{ uri: route.params.picture }} />
+            <Image source={{ uri: route.params.picture }} style={{height:300, width:300, borderRadius:5}} />
+            <Pressable onPress={() => setModalBrandsVisible(true)} style={}>
+                <Text>
+                    {selectedBrand || "Sélectionnez une marque"}
+                </Text>
+            </Pressable>
+
+
+            <Picker
+                selectedValue={selectedBrand}
+                onValueChange={setSelectedBrand}
+                style={styles.picker}
+            >
+                <Picker.Item label="Sélectionnez une marque" value="" />
+                {brand.map((model, i) => (
+                <Picker.Item label={model} value={model} key={i} />
+                ))}
+            </Picker>
             <Picker
                 selectedValue={selectedModel}
                 onValueChange={setSelectedModel}
                 style={styles.picker}
             >
                 <Picker.Item label="Sélectionnez un modèle" value="" />
-                {models.map((model, i) => (
+                {brand.map((model, i) => (
                 <Picker.Item label={model} value={model} key={i} />
                 ))}
             </Picker>
+
+
+            <Modal visible={modalBrandsVisible || modalModelsVisible} animationType="slide">
+
+            </Modal>
         </View>
     )
 };
