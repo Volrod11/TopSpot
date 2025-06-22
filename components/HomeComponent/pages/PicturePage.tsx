@@ -516,7 +516,8 @@ const PicturePage: React.FC<Props> = ({ route, navigation }) => {
   const messages = ["test1", "test2", "test3", "test4", "test5"];
 
   
-
+  console.log("Les pictures : ", picture);
+  
   return (
     <View style={styles.container}>
       <View style={styles.top_picture_infos}>
@@ -529,7 +530,7 @@ const PicturePage: React.FC<Props> = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
       <View style={styles.imageContainer}>
-        <Image src={picture} style={styles.image} />
+        <Image source={{uri : picture}} style={styles.image} />
       </View>
       <View style={styles.picture_actions}>
         <TouchableHighlight {...touchProps}>
