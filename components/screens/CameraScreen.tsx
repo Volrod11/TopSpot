@@ -8,12 +8,11 @@ import { RouteProp } from '@react-navigation/native';
 import { CameraScreenStackParamList } from '../../types';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
-import * as FileSystem from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
 
 
 import recognizeModel from '../../api/carRecognition/carRecognitionApi';
 import Swiper from 'react-native-swiper';
+import { log } from 'console';
 
 const Tab = createStackNavigator<RootStackParamList>();
 const { width, height } = Dimensions.get('window');
@@ -33,50 +32,7 @@ type Props = {
 
 
 
-//DB functions
-const addPictureToDatabase = async (picture : string, userId : string) => {
-    if (picture && userId) {
-      const base64 = await FileSystem.readAsStringAsync(picture, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
 
-      // Créer un nom de fichier unique
-      const fileName = `${Date.now()}.jpg`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('pictures')
-      .upload(fileName, decode(base64), {
-        contentType: 'image/jpeg',
-      });
-
-      const { data, error } = await supabase
-        .from('pictures')
-        .insert([{ user_id : userId, picture: picture }]);
-
-      if (uploadError) {
-      console.error("Erreur lors de l'upload :", uploadError.message);
-      return;
-      }
-
-      // Obtenir l'URL publique
-      const { data: publicUrlData } = supabase
-        .storage
-        .from('your-bucket-name')
-        .getPublicUrl(fileName);
-
-      const publicUrl = publicUrlData.publicUrl;
-
-      const { error: dbError } = await supabase
-      .from('pictures')
-      .insert([{ user_id : userId, picture: publicUrl }]);
-
-      if (dbError) {
-        console.error("Erreur lors de l'insertion dans la base de données :", dbError.message);
-      } else {
-        console.log("Image ajoutée à la base de données avec succès :", publicUrl);
-      }
-    }
-  };
 
 
 const CameraScreen: React.FC<{ route: CameraScreenRouteProp }> = ({ route }) => {
@@ -84,6 +40,7 @@ const CameraScreen: React.FC<{ route: CameraScreenRouteProp }> = ({ route }) => 
   const [facing, setFacing] = useState<CameraType>('back');
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  const [currentPhotoId, setCurrentPhotoId] = useState<string | null>(null);
   const [currentPhoto, setCurrentPhoto] = useState<string |null>(null);
 
   const navigation = useNavigation<CameraScreenNavigationProp>();
@@ -142,17 +99,12 @@ const CameraScreen: React.FC<{ route: CameraScreenRouteProp }> = ({ route }) => 
   );
 
   const handleLogAndRedirect = async () => {
+
     if (currentPhoto) {
       navigation.navigate('PhotoDetailsScreen', { picture: currentPhoto, user_id: user_id });
       setPhotos([]);
       setSelectedPhotoIndex(null);
     }
-    
-    if (currentPhoto) {
-      await addPictureToDatabase(currentPhoto, user_id);
-      setPhotos([]);
-      setSelectedPhotoIndex(null);
-    } 
   };
 
 

@@ -8,6 +8,7 @@ import { supabase } from '../../../lib/supabase';
 import { useState, useEffect } from 'react';
 
 import PagerView from 'react-native-pager-view';
+import { get } from 'http';
 
 const Stack = createNativeStackNavigator(); // Stack contains Screen & Navigator properties
 
@@ -19,27 +20,61 @@ type Props = {
 
 type Picture = {
   id: string;
-  car_type: string;
   pictures: {
     picture: string;
   };
 }
 
+type PictureAndCarInfos = {
+  id: string;
+  pictures: {
+    picture: string;
+  };
+  voitures: {
+    id: string;
+    marque: string;
+    modele: string;
+    annee: Int16Array;
+    chevaux: Int16Array;
+    acceleration_0_100: Float16Array;
+    poids: Int16Array;
+  };
+  voiture_categorie: {
+    categorie: string;
+  };
+}
+
 interface GroupedPictures {
-  [car_types: string]: Picture[];
+  [car_types: string]: PictureAndCarInfos[];
 }
 
 
 //Const Function
-const getPicturesFromPicturesInGarages = async (garage_id : string): Promise<Picture[]> => {
+const getPicturesAndCarsInfosFromPicturesInGarages = async (garage_id : string): Promise<PictureAndCarInfos[]> => {
+  console.log("garage_id: ", garage_id);
+  
+
   if (garage_id) {
+    console.log("ok");
+    
     const { data, error } = await supabase
     .from('pictures_in_garages')
     .select(`
       id,
-      car_type,
       pictures (
-        picture
+        picture,
+        voitures(
+          id,
+          marque,
+          modele,
+          annee,
+          chevaux,
+          acceleration_0_100,
+          poids,
+          voiture_categorie (
+            categorie
+          )
+        )
       )
     `)
     .eq('garage_id', garage_id);
@@ -48,58 +83,128 @@ const getPicturesFromPicturesInGarages = async (garage_id : string): Promise<Pic
         console.error("Error getting pictures from pictures_in_garages : ", error);
     }
       
-    const pictures: Picture[] = data?.map((item: any) => ({
-      id: item.id,
-      car_type: item.car_type,
-      pictures: {
-        picture: item.pictures.picture,
-      },
-    }));
+    console.log("data: ", data);
     
-    return(pictures?? []);
+    const picturesAndCarsInfos: PictureAndCarInfos[] = data?.map((item: any) => ({
+      id: item.id,
+      pictures: {
+        picture: item.pictures?.picture ?? "",
+      },
+      voitures: {
+        id : item.pictures.voitures?.id ?? "",
+        marque : item.pictures.voitures?.marque ?? "",
+        modele : item.pictures.voitures?.modele ?? "",
+        annee : item.pictures.voitures?.annee ?? "",
+        chevaux : item.pictures.voitures?.chevaux ?? "",
+        acceleration_0_100 : item.pictures.voitures?.acceleration_0_100 ?? "",
+        poids : item.pictures.voitures?.poids ?? ""
+      },
+      voiture_categorie: {
+        categorie : item.pictures.voitures.voiture_categorie?.categorie ?? ""
+      }
+    }));
+
+    console.log("picturesAndCarsInfos: ", picturesAndCarsInfos);
+    
+    
+    return(picturesAndCarsInfos?? []);
   }
 };
 
-function groupByCarTypes(pictures : Picture[]): GroupedPictures  {
-  return pictures.reduce((groupedPictures, picture) => {
-    const { car_type } = picture;
-    if (!groupedPictures[car_type]) {
-      groupedPictures[car_type] = [];
+
+/*const getCarsInfosFromPictures = async (pictures: Picture[]): Promise<Car[]> => {
+  if (pictures.length > 0) {
+    console.log("Pictures to get cars infos from: ", pictures);
+    
+
+    const ids_pictures = pictures.map(picture => picture.id);
+    const { data : cars_ids_data, error : cars_ids_error } = await supabase
+      .from('pictures')
+      .select('car_id')
+      .in('id', ids_pictures);
+
+    if (cars_ids_error) {
+      console.error("Error getting cars ids from pictures: ", cars_ids_error);
+      return [];
     }
-    groupedPictures[car_type].push(picture);
+
+    console.log("cars_ids_data : ", cars_ids_data);
+    
+
+    const lst_cars_ids = cars_ids_data?.map((item: any) => item.car_id) ?? [];
+
+    const { data : cars_infos_data, error : cars_infos_error } = await supabase
+      .from('voitures')
+      .select('*, voiture_categorie(categorie), pictures(picture)')
+      .in('id', lst_cars_ids);
+
+    if (cars_infos_error) {
+      console.error("Error getting cars infos from voitures: ", cars_infos_error);
+      return [];
+    }
+
+    console.log("Cars infos data: ", cars_infos_data);
+    
+    return cars_infos_data as Car[];
+  }
+  return [];
+}*/-
+
+
+function groupByCarTypes(picturesAndCarsInfos : PictureAndCarInfos[]): GroupedPictures  {
+  return picturesAndCarsInfos.reduce((groupedPictures, pictureAndCarInfos) => {
+    const { voiture_categorie } = pictureAndCarInfos;
+    const categorie = voiture_categorie.categorie;
+    if (!groupedPictures[categorie]) {
+      groupedPictures[categorie] = [];
+    }
+    groupedPictures[categorie].push(pictureAndCarInfos);
     return groupedPictures;
   }, {});
 };
 
 
 const GaragePage: React.FC<Props> = ({ route }) => {
-  const [pictures, setPictures] = useState<Picture[]>([]);
+  const [picturesAndcarsInfos, setPicturesAndcarsInfos] = useState<PictureAndCarInfos[]>([]);
   const [groupedPictures, setGroupedPictures] = useState<GroupedPictures>();
+  //const [carsInfos, setCarsInfos] = useState<Car[]>([]);
 
   const garage_id = route.params.garage_id;
 
   useEffect(() => {
     const loadPicturesAndGroup  = async () => {
-      const loadedPictures = await getPicturesFromPicturesInGarages(garage_id);
-      setPictures(loadedPictures);
+      const loadedPicturesAndInfos = await getPicturesAndCarsInfosFromPicturesInGarages(garage_id);
+      setPicturesAndcarsInfos(loadedPicturesAndInfos);
     };
    
     loadPicturesAndGroup ();
   }, [garage_id]);
 
-  useEffect(() => {
+  
+
+  /*useEffect(() => {
+    const loadCarsInfos = async () => {
+      if (pictures.length > 0) {
+        const loadedcarsInfos = await getCarsInfosFromPictures(pictures);
+        setCarsInfos(loadedcarsInfos);
+      }
+    };
+
+    loadCarsInfos();
+  },[pictures]);*/
+
+  /*useEffect(() => {
     const groupPictures = async () => {
         if (pictures.length > 0) {
           // Grouper les images après avoir mis à jour l'état
-          const loadedGroupedPictures = groupByCarTypes(pictures);
+          const loadedGroupedPictures = groupByCarTypes(carsInfos);
 
           setGroupedPictures(loadedGroupedPictures);
         }
     };
 
     groupPictures();
-  }, [pictures]);
-
+  }, [pictures]);*/
   
   return (
     <View style={styles.container}>
@@ -109,42 +214,41 @@ const GaragePage: React.FC<Props> = ({ route }) => {
           <View style={styles.cat_infos} key={carType}>
             <Text style={styles.title}>{carType}</Text>
             <PagerView style={styles.container2} initialPage={0}>
-              {groupedPictures[carType].map((picture) => 
+              {groupedPictures[carType].map((pictureAndCarInfos) => 
                 index % 2 === 0 ? (
                   <View 
                     style={styles.categorie_left} 
-                    key={picture.id}
+                    key={pictureAndCarInfos.id}
                   >
-                    <Image source={{ uri: picture.pictures.picture }} style={styles.image}/>
+                    <Image source={{ uri: pictureAndCarInfos.pictures.picture }} style={styles.image}/>
                     <View style={styles.infos_car} >
-                      <Text style={styles.info}>McLaren</Text>
-                      <Text style={styles.info}>2017</Text>
-                      <Text style={styles.info}>800 Nm</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.marque}</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.annee}</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.acceleration_0_100} s</Text>
                     </View>
                     <View style={styles.infos_car} >
-                      <Text style={styles.info}>Senna</Text>
-                      <Text style={styles.info}>800 cv</Text>
-
-                      <Text style={styles.info}>1198 kg</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.modele}</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.chevaux} cv</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.poids} kg</Text>
                     </View>
                   </View>
                 ) : (
                   <View 
                     style={styles.categorie_right} 
-                    key={picture.id}
+                    key={pictureAndCarInfos.id}
                   > 
                     <View style={styles.infos_car} >
-                      <Text style={styles.info}>McLaren</Text>
-                      <Text style={styles.info}>2017</Text>
-                      <Text style={styles.info}>800 Nm</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.marque}</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.annee}</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.acceleration_0_100} s</Text>
                     </View>
                     <View style={styles.infos_car} >
-                      <Text style={styles.info}>Senna</Text>
-                      <Text style={styles.info}>800 cv</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.modele}</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.chevaux} cv</Text>
 
-                      <Text style={styles.info}>1198 kg</Text>
+                      <Text style={styles.info}>{pictureAndCarInfos.voitures.poids} kg</Text>
                     </View>
-                    <Image source={{ uri: picture.pictures.picture }} style={styles.image}/>
+                    <Image source={{ uri: pictureAndCarInfos.pictures.picture }} style={styles.image}/>
                   </View>
                 )
               )}
