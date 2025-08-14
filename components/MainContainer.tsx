@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Session } from '@supabase/supabase-js'
-import ProfileScreenNavigator from './navigations/ProfileScreenNavigator';
+
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -16,6 +16,7 @@ import CameraScreen from './screens/CameraScreen';
 import MapScreen from './screens/MapScreen';
 import ProfileScreenStack from './screens/ProfileScreen';
 import CameraScreenNavigation from './navigations/CameraScreenNavigation';
+import ProfileScreenNavigator from './navigations/ProfileScreenNavigator';
 
 //Screen names
 const homeName = "Home";
@@ -70,7 +71,7 @@ function MainContainer({ session }: { session: Session }) {
             "tabBarActiveTintColor": "#ffe100",
             "tabBarInactiveTintColor": "grey",
             "tabBarStyle": {
-                backgroundColor: '#000000',
+                backgroundColor: '#FFFFFF',
                 height: 110,
                 display: route.name === cameraName ? 'none' : 'flex', },
             "headerShown": false,
