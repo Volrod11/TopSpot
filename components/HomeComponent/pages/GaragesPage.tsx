@@ -1,17 +1,14 @@
 import * as React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { Button, Text, View, StyleSheet, Image, Pressable, ListRenderItem } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../../lib/supabase';
 import { useEffect, useState } from 'react';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 
-import Garage from '../components/GarageAncien';
 import MiniGarageCard from '../../GarageComponent/components/MiniGarageCard';
 import MyGarageCard from '../../GarageComponent/components/MyGarageCard';
+import { useUser } from '../../../context/UserContext';
+import LastsSpots from '../components/LastsSpots';
 
 
 const data = [
@@ -46,110 +43,93 @@ const data = [
 //Type
 type GaragesPageProps = {
     user_id: string | null;
+    is_garages_page_menu: boolean;
 };
 
+type Picture = {
+    id: string | null;
+    url: string | null;
+    car_type: string;
+}
 
 type Garage_with_pictures = {
     garage_id: string;
     username: string;
-    avatar_url: string;
+    avatar_url: string | null;
     nb_categories: number;
     total_likes: number;
     total_comments: number;
-    top_pictures_by_category: {
-        id: string | null;
-        url: string | null;
-        car_types: string;
-    }[];
+    top_pictures_by_category: Picture[];
 };
 
 
 
 //Const Function
-const fetchGaragesFromDatabase = async (user_id: string | null) => {
-    console.log("Fetching garages for user_id:", user_id);
+const fetchGaragesFromDatabase = async (user_id: string | null, is_garages_page_menu: boolean) => {
 
-    if (user_id != null) {
-        const { data: Garage_with_pictures, error } = await supabase
-            .rpc("get_garages_and_car_types_with_details2", { user_id: user_id });
-        if (error) {
-            console.error("Error fetching garages : ", error);
-        }
-
-        return (Garage_with_pictures ?? []);
-    } else {
-        const { data: Garage_with_pictures, error } = await supabase
-            .rpc("get_garages_and_car_types_with_details2");
-        if (error) {
-            console.error("Error fetching garages : ", error);
-        }
-        console.log("Garages fetched: ", Garage_with_pictures);
-
-        return (Garage_with_pictures ?? []);
+    const { data: Garage_with_pictures, error } = await supabase
+        .rpc("get_garages_and_car_types_with_details", { profile_param: user_id, is_current_user: is_garages_page_menu });
+    if (error) {
+        console.error("Error fetching garages : ", error);
     }
+
+    return (Garage_with_pictures ?? []);
+
 };
 
-const fetchCarTypesFromDatabase = async () => {
-    const { data: carTypes, error } = await supabase
-        .from('garage_configurations')
-        .select('car_types')
-        .order('created_at', { ascending: true })
-        .limit(1);
-
-    if (error) {
-        console.error("Error fetching car types: ", error);
-        return [];
-    }
-
-    return carTypes;
-}
 
 
-
-const GaragesPage: React.FC<GaragesPageProps> = ({ user_id }) => {
+const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, is_garages_page_menu }) => {
     const [garages, setGarages] = useState<Garage_with_pictures[]>([])
-    const [carTypes, setCarTypes] = useState<String[]>([]);
+    const [myGarage, setMyGarage] = useState<Garage_with_pictures[]>([])
 
+    const { currentUserId } = useUser();
     const navigation = useNavigation();
+
+
 
 
     useEffect(() => {
         const fetchData = async () => {
+            const fetchedMyGarage = is_garages_page_menu ? await fetchGaragesFromDatabase(currentUserId, is_garages_page_menu) : [];
+            const fetchedGarages = await fetchGaragesFromDatabase(user_id, false);
 
-            const fetchedCarTypes = await fetchCarTypesFromDatabase();
-
-            const fetchedGarages = await fetchGaragesFromDatabase(user_id);
-            console.log("fetchedGarages", fetchedGarages);
-
-            setCarTypes(fetchedCarTypes.map((type) => type.car_types));
             setGarages(fetchedGarages);
-
-            console.log("Garages fetched: ", fetchedGarages[0]);
-
+            setMyGarage(fetchedMyGarage);
         };
 
         fetchData();
     }, []);
-
-
-
-
+    
+    
     return (
         <View style={styles.main_style}>
-            <ScrollView>
-                <View style={styles.myGarageCard}>
-                    <MyGarageCard />
+            {myGarage.length > 0 && garages.length > 0 ? (
+                <View style={{ flex: 1 }}>
+                    <FlatList
+                        style={{ flex: 1 }}
+                        data={garages}
+                        keyExtractor={item => item.garage_id}
+                        numColumns={2}
+                        columnWrapperStyle={styles.row}
+                        contentContainerStyle={{ padding: 12, flexGrow: 1 }}
+                        ListHeaderComponent={
+                            <>
+                                {myGarage.length > 0 && (
+                                    <View style={styles.myGarageCard}>
+                                        <MyGarageCard garage_with_pictures={myGarage[0]} />
+                                    </View>
+                                )}
+                            </>
+                        }
+                        renderItem={({ item }) => (<MiniGarageCard garage_with_pictures={item} />)}
+                    />
                 </View>
-                <FlatList
-                    data={garages}
-                    renderItem={({ item }) => <MiniGarageCard garage_with_pictures={item} car_types={carTypes} />}
-                    keyExtractor={item => item.garage_id}
-                    numColumns={2}
-                    columnWrapperStyle={styles.row}
-                    contentContainerStyle={styles.container_garage}
-                />
-            </ScrollView>
+            ) : (
+                <Text style={styles.chargement}>Chargement...</Text>
+            )}
         </View>
+
     );
 }
 
@@ -182,6 +162,10 @@ const styles = StyleSheet.create({
         paddingTop: 10,
     },
     container_garage: {
-        paddingHorizontal: 10, paddingBottom: 16
+        paddingHorizontal: 10,
+        paddingBottom: 16,
     },
+    chargement: {
+        alignSelf: 'center',
+    }
 });

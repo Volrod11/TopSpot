@@ -11,11 +11,10 @@ const ProfileScreenStack = createStackNavigator<ProfileScreenStackParamList>();
 
 
 
-const ProfileScreenNavigator = ({ route }) => {
-    const { user_id } = route.params;
+const ProfileScreenNavigator = () => {
     return (
       <ProfileScreenStack.Navigator>
-        <ProfileScreenStack.Screen name="ProfileScreen" component={ProfileScreen} initialParams={{ user_id }} options={{ headerShown: false }} />
+        <ProfileScreenStack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerShown: false }} />
         <ProfileScreenStack.Screen name="PicturePage" component={PicturePage} />
         <ProfileScreenStack.Screen name="GaragePage" component={GaragePage} />
         <ProfileScreenStack.Screen name="Settings" component={Settings} />

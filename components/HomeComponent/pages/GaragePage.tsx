@@ -1,330 +1,529 @@
 import * as React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { Text, View, StyleSheet, Image, ScrollView } from 'react-native';
+import { Text, View, StyleSheet, Image, ScrollView, FlatList, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import { useState, useEffect } from 'react';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
-import PagerView from 'react-native-pager-view';
-import { get } from 'http';
+
+import { log } from 'console';
+import { Ionicons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator(); // Stack contains Screen & Navigator properties
 
 type GarageRouteProp = RouteProp<RootStackParamList, 'GaragePage'>;
 
 type Props = {
-    route: GarageRouteProp;
+  route: GarageRouteProp;
 };
 
-type Picture = {
+type Car = {
   id: string;
-  pictures: {
-    picture: string;
-  };
-}
+  marque: string;
+  modele: string;
+  annee: number;
+  chevaux: number;
+  acceleration_0_100: number;
+  poids: number;
+  categories: string[];
+};
 
 type PictureAndCarInfos = {
-  id: string;
-  pictures: {
-    picture: string;
-  };
-  voitures: {
-    id: string;
-    marque: string;
-    modele: string;
-    annee: Int16Array;
-    chevaux: Int16Array;
-    acceleration_0_100: Float16Array;
-    poids: Int16Array;
-  };
-  voiture_categorie: {
-    categorie: string;
-  };
+  picture_id: string;
+  picture_url: string;
+  description: string | null;
+  like_count: number;
+  car: Car;
 }
 
-interface GroupedPictures {
-  [car_types: string]: PictureAndCarInfos[];
+type Picture_by_car_type = {
+  car_type: string;
+  color: string;
+  icon: string;
+  pictures: PictureAndCarInfos[];
+}
+
+type Garage_details = {
+  garage_id: string;
+  username: string,
+  avatar_url: string | null;
+  total_likes: number;
+  total_comments: number;
+  pictures: Picture_by_car_type[];
+}
+
+type Completion = {
+  car_type: string;
+  nb_pictures: number;
+}
+
+type HeaderInfos = {
+  username: string;
+  avatar_url: string | null;
+  like_count: number;
+  garage_id: string;
+  completions: Completion[];
+}
+
+type Garage_car_types = {
+  car_type: string;
+  icon: string;
 }
 
 
-//Const Function
-const getPicturesAndCarsInfosFromPicturesInGarages = async (garage_id : string): Promise<PictureAndCarInfos[]> => {
-  console.log("garage_id: ", garage_id);
-  
 
-  if (garage_id) {
-    console.log("ok");
-    
-    const { data, error } = await supabase
-    .from('pictures_in_garages')
-    .select(`
-      id,
-      pictures (
-        picture,
-        voitures(
-          id,
-          marque,
-          modele,
-          annee,
-          chevaux,
-          acceleration_0_100,
-          poids,
-          voiture_categorie (
-            categorie
-          )
-        )
-      )
-    `)
-    .eq('garage_id', garage_id);
+const windowWidth = Dimensions.get('window').width;
 
-    if (error) {
-        console.error("Error getting pictures from pictures_in_garages : ", error);
-    }
-      
-    console.log("data: ", data);
-    
-    const picturesAndCarsInfos: PictureAndCarInfos[] = data?.map((item: any) => ({
-      id: item.id,
-      pictures: {
-        picture: item.pictures?.picture ?? "",
-      },
-      voitures: {
-        id : item.pictures.voitures?.id ?? "",
-        marque : item.pictures.voitures?.marque ?? "",
-        modele : item.pictures.voitures?.modele ?? "",
-        annee : item.pictures.voitures?.annee ?? "",
-        chevaux : item.pictures.voitures?.chevaux ?? "",
-        acceleration_0_100 : item.pictures.voitures?.acceleration_0_100 ?? "",
-        poids : item.pictures.voitures?.poids ?? ""
-      },
-      voiture_categorie: {
-        categorie : item.pictures.voitures.voiture_categorie?.categorie ?? ""
-      }
-    }));
 
-    console.log("picturesAndCarsInfos: ", picturesAndCarsInfos);
-    
-    
-    return(picturesAndCarsInfos?? []);
+
+
+//BDD
+const fetchGarageDetails = async (garage_id: string) => {
+  const { data, error } = await supabase
+    .rpc("get_garage_details", { p_garage_id: garage_id });
+  if (error) {
+    console.error("Error fetching garage details: ", error);
+    return null;
   }
+
+  return data as Garage_details;
 };
 
 
-/*const getCarsInfosFromPictures = async (pictures: Picture[]): Promise<Car[]> => {
-  if (pictures.length > 0) {
-    console.log("Pictures to get cars infos from: ", pictures);
-    
 
-    const ids_pictures = pictures.map(picture => picture.id);
-    const { data : cars_ids_data, error : cars_ids_error } = await supabase
-      .from('pictures')
-      .select('car_id')
-      .in('id', ids_pictures);
-
-    if (cars_ids_error) {
-      console.error("Error getting cars ids from pictures: ", cars_ids_error);
-      return [];
-    }
-
-    console.log("cars_ids_data : ", cars_ids_data);
-    
-
-    const lst_cars_ids = cars_ids_data?.map((item: any) => item.car_id) ?? [];
-
-    const { data : cars_infos_data, error : cars_infos_error } = await supabase
-      .from('voitures')
-      .select('*, voiture_categorie(categorie), pictures(picture)')
-      .in('id', lst_cars_ids);
-
-    if (cars_infos_error) {
-      console.error("Error getting cars infos from voitures: ", cars_infos_error);
-      return [];
-    }
-
-    console.log("Cars infos data: ", cars_infos_data);
-    
-    return cars_infos_data as Car[];
+const fetchGarageCarTypes = async (garage_id: string) => {
+  const { data, error } = await supabase
+    .rpc("get_car_types_for_garage", { garage_id: garage_id });
+  if (error) {
+    console.error("Error fetching garage car types: ", error);
+    return [];
   }
-  return [];
-}*/-
 
-
-function groupByCarTypes(picturesAndCarsInfos : PictureAndCarInfos[]): GroupedPictures  {
-  return picturesAndCarsInfos.reduce((groupedPictures, pictureAndCarInfos) => {
-    const { voiture_categorie } = pictureAndCarInfos;
-    const categorie = voiture_categorie.categorie;
-    if (!groupedPictures[categorie]) {
-      groupedPictures[categorie] = [];
-    }
-    groupedPictures[categorie].push(pictureAndCarInfos);
-    return groupedPictures;
-  }, {});
+  return data as Garage_car_types[];
 };
 
 
-const GaragePage: React.FC<Props> = ({ route }) => {
-  const [picturesAndcarsInfos, setPicturesAndcarsInfos] = useState<PictureAndCarInfos[]>([]);
-  const [groupedPictures, setGroupedPictures] = useState<GroupedPictures>();
-  //const [carsInfos, setCarsInfos] = useState<Car[]>([]);
 
-  const garage_id = route.params.garage_id;
+const fetchIsGarageLiked = async (garage_id: string) => {
+  const { data, error } = await supabase
+    .rpc("has_liked_garage", { p_garage_id: garage_id });
+  if (error) {
+    console.error("Error checking if garage is liked: ", error);
+    return false;
+  }
 
-  useEffect(() => {
-    const loadPicturesAndGroup  = async () => {
-      const loadedPicturesAndInfos = await getPicturesAndCarsInfosFromPicturesInGarages(garage_id);
-      setPicturesAndcarsInfos(loadedPicturesAndInfos);
-    };
-   
-    loadPicturesAndGroup ();
-  }, [garage_id]);
+  return data;
+}
 
-  
 
-  /*useEffect(() => {
-    const loadCarsInfos = async () => {
-      if (pictures.length > 0) {
-        const loadedcarsInfos = await getCarsInfosFromPictures(pictures);
-        setCarsInfos(loadedcarsInfos);
-      }
-    };
+const likeGarage = async (garage_id: string) => {
+  const { data, error } = await supabase.rpc('like_garage', {
+    p_garage_id: garage_id,
+  })
 
-    loadCarsInfos();
-  },[pictures]);*/
+  if (error) {
+    console.error('Erreur like_garage:', error)
+    return null
+  }
 
-  /*useEffect(() => {
-    const groupPictures = async () => {
-        if (pictures.length > 0) {
-          // Grouper les images après avoir mis à jour l'état
-          const loadedGroupedPictures = groupByCarTypes(carsInfos);
+  return { data, error };
+}
 
-          setGroupedPictures(loadedGroupedPictures);
-        }
-    };
 
-    groupPictures();
-  }, [pictures]);*/
-  
+const unlikeGarage = async (garage_id: string) => {
+  const { data, error } = await supabase.rpc('unlike_garage', {
+    p_garage_id: garage_id,
+  })
+
+  if (error) {
+    console.error('Erreur unlike_garage:', error)
+    return null
+  }
+
+  return { data, error };
+}
+
+
+
+
+const HeaderCard = ({ headerInfos, carTypes, isLikedGarage }: { headerInfos: HeaderInfos, carTypes: Garage_car_types[], isLikedGarage: boolean }) => {
+  const [isLiked, setIsLiked] = useState(isLikedGarage);
+  const [likeCount, setLikeCount] = useState(headerInfos.like_count);
+
+  const handleLike = async () => {
+    const { error } = await likeGarage(headerInfos.garage_id);
+    if (!error) {
+      setIsLiked(true);
+      setLikeCount(prev => prev + 1);
+    }
+  };
+
+  const handleUnlike = async () => {
+    const { error } = await unlikeGarage(headerInfos.garage_id);
+    if (!error) {
+      setIsLiked(false);
+      setLikeCount(prev => prev - 1);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
-      {groupedPictures ? (
-        Object.keys(groupedPictures).map((carType, index) => (
-          <View style={styles.cat_infos} key={carType}>
-            <Text style={styles.title}>{carType}</Text>
-            <PagerView style={styles.container2} initialPage={0}>
-              {groupedPictures[carType].map((pictureAndCarInfos) => 
-                index % 2 === 0 ? (
-                  <View 
-                    style={styles.categorie_left} 
-                    key={pictureAndCarInfos.id}
-                  >
-                    <Image source={{ uri: pictureAndCarInfos.pictures.picture }} style={styles.image}/>
-                    <View style={styles.infos_car} >
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.marque}</Text>
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.annee}</Text>
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.acceleration_0_100} s</Text>
-                    </View>
-                    <View style={styles.infos_car} >
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.modele}</Text>
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.chevaux} cv</Text>
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.poids} kg</Text>
-                    </View>
-                  </View>
-                ) : (
-                  <View 
-                    style={styles.categorie_right} 
-                    key={pictureAndCarInfos.id}
-                  > 
-                    <View style={styles.infos_car} >
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.marque}</Text>
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.annee}</Text>
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.acceleration_0_100} s</Text>
-                    </View>
-                    <View style={styles.infos_car} >
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.modele}</Text>
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.chevaux} cv</Text>
-
-                      <Text style={styles.info}>{pictureAndCarInfos.voitures.poids} kg</Text>
-                    </View>
-                    <Image source={{ uri: pictureAndCarInfos.pictures.picture }} style={styles.image}/>
-                  </View>
-                )
-              )}
-            </PagerView>
+    <View style={styles.headerCard}>
+      {/* En-tête de la carte */}
+      <View style={styles.header}>
+        <Image source={
+          headerInfos.avatar_url === null
+            ? require('../../../assets/no_picture.png') :
+            { uri: headerInfos.avatar_url }
+        } style={styles.avatar} />
+        <View style={styles.userInfo}>
+          <Text style={styles.username}>{headerInfos.username}</Text>
+          <Text style={styles.postTime}>Rien</Text>
+        </View>
+        <View style={styles.likesContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {isLiked
+              ? <Pressable onPress={handleUnlike}>
+                <Ionicons name="heart" size={20} color="red" />
+              </Pressable> :
+              <Pressable onPress={handleLike}>
+                <Ionicons name="heart-outline" size={20} color="black" />
+              </Pressable>}
+            <Text style={styles.likesText}>{likeCount}</Text>
           </View>
-        ))
-      ) : (
-        <Text>Chargement des données...</Text>
-      )}
-        
-      </ScrollView>
-      <StatusBar style="auto" />
+          <Text style={styles.likesLabel}>Likes</Text>
+        </View>
+      </View>
+
+      {/* Section des catégories */}
+      <View style={styles.categoriesContainer}>
+        {carTypes.map((cat, index) => {
+          const completion = headerInfos.completions.find(
+            comp => comp.car_type === cat.car_type
+          );
+
+          const isPresent = !!completion; // plus simple que some()
+          const nbPictures = completion ? completion.nb_pictures : 0;
+          const iconColor = isPresent ? '#FF6B35' : '#808080';
+          return (
+            <View key={index} style={styles.categoryItem}>
+              <TouchableOpacity style={[styles.iconContainer, { backgroundColor: iconColor }]}>
+                <FontAwesome5 name="car" size={20} color={'#fff'} />
+              </TouchableOpacity>
+              <Text style={styles.categoryName}>{cat.car_type}</Text>
+              <Text style={[styles.categoryCount, { color: iconColor }]}>{nbPictures}/1</Text>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
+const CarCard = ({ pictureAndInfos }: { pictureAndInfos: PictureAndCarInfos }) => (
+  <View style={styles.card}>
+    <Image source={{ uri: pictureAndInfos.picture_url }} style={styles.image} />
+    <View style={styles.infoContainer}>
+      <Text style={styles.carName}>{pictureAndInfos.car.marque} {pictureAndInfos.car.modele}</Text>
+      <Text style={styles.description}>{pictureAndInfos.description}</Text>
+      <View style={styles.textContainer}>
+        <View style={styles.leftColumn}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Puissance: </Text>
+            <Text style={styles.value}>{pictureAndInfos.car.chevaux} Cv</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>   0-100 km/h: </Text>
+            <Text style={styles.value}>{pictureAndInfos.car.acceleration_0_100}s</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Puissance: </Text>
+            <Text style={styles.value}>{pictureAndInfos.car.chevaux} ch</Text>
+          </View>
+        </View>
+        <View style={styles.rightColumn}>
+          <View style={styles.row}>
+            <Text style={styles.label}>   Couple: </Text>
+            <Text style={styles.value}>{pictureAndInfos.car.chevaux} Nm</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Poids: </Text>
+            <Text style={styles.value}>{pictureAndInfos.car.poids} kg</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>   Année: </Text>
+            <Text style={styles.value}>{pictureAndInfos.car.annee}</Text>
+          </View>
+        </View>
+      </View>
+    </View >
+  </View >
+);
 
-export default GaragePage;
+
+
+
+
+const GaragePage: React.FC<Props> = ({ route }) => {
+  const [garageDetails, setGarageDetails] = useState<Garage_details>(null);
+  const [garageCarTypes, setGarageCarTypes] = useState<Garage_car_types[]>([]);
+  const [completion, setCompletion] = useState<Completion[]>([]);
+  const [isGarageLiked, setIsGarageLiked] = useState<boolean>(false);
+
+  const garage_id = route.params.garage_id;
+
+  useEffect(() => {
+    const fetchDatas = async () => {
+      const loadedGarageDetails = await fetchGarageDetails(garage_id);
+      const loadedGarageCarTypes = await fetchGarageCarTypes(garage_id);
+      const completionData: Completion[] = (loadedGarageDetails[0].pictures ?? []).map((item: any) => ({
+        car_type: item.car_type,
+        nb_pictures: item.pictures.length,
+        garage_id: garage_id
+      }));
+      const loadIsLikedgarage = await fetchIsGarageLiked(garage_id);
+
+      setGarageDetails(loadedGarageDetails[0]);
+      setGarageCarTypes(loadedGarageCarTypes);
+      setCompletion(completionData);
+      setIsGarageLiked(loadIsLikedgarage);
+    };
+
+    fetchDatas();
+
+  }, [garage_id]);
+
+
+  return (
+    <ScrollView style={styles.container}>
+      <HeaderCard headerInfos={{
+        username: garageDetails?.username || '',
+        avatar_url: garageDetails?.avatar_url || null,
+        like_count: garageDetails?.total_likes || 0,
+        garage_id: garage_id,
+        completions: completion
+      }} carTypes={garageCarTypes}
+        isLikedGarage={isGarageLiked} />
+
+      {/* Affichage des photos par catégorie */}
+      {garageDetails !== null ? (
+        Array.isArray(garageDetails.pictures) && garageDetails.pictures.map((picture_by_car_type: any, idx: any) => (
+          <View key={idx} style={styles.categoryContainer}>
+            <View style={styles.categoryHeader}>
+              <View style={styles.left}>
+                <Text style={[styles.icon]}><FontAwesome5 name="car" size={24} color={picture_by_car_type.color} /></Text>
+                <Text style={[styles.categoryTitle, { color: picture_by_car_type.color }]}>
+                  {picture_by_car_type.car_type.toUpperCase()}
+                </Text>
+              </View>
+              <View style={[styles.badge, { backgroundColor: picture_by_car_type.color }]}>
+                <Text style={styles.badgeText}>
+                  {picture_by_car_type.pictures.length} {picture_by_car_type.pictures.length > 1 ? "photos" : "photo"}
+                </Text>
+              </View>
+            </View>
+
+            <FlatList
+              data={picture_by_car_type.pictures}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item.picture_id}
+              renderItem={({ item }) => <CarCard pictureAndInfos={item} />}
+              contentContainerStyle={{ marginHorizontal: 20 }}
+            />
+
+          </View>
+
+        ))
+
+      ) : (
+        <Text style={styles.chargement}>Chargement...</Text>
+      )}
+    </ScrollView>
+
+  );
+};
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#0D0D0D',
-    },
-    scrollView: {
-      width: "100%",
-      backgroundColor: '#0D0D0D',
-    },
-    image: {
-      flex: 1,
-      height: "100%",
-      borderRadius: 18,
-    },
-    cat_infos: {
-      marginTop: 30,
-    },
-    categorie_left: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'flex-start',
-      height: 150,
-      marginBottom: 30,
-    },
-    categorie_right: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'flex-start',
-      height: 150,
-      marginBottom: 30,
-    },
-    infos_car: {
-      flex: 1,
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'flex-start',
-      justifyContent: 'center',
-      paddingTop: 10,
-    },
-    info: {
-      color : "#fff",
-      padding : 10,
-      fontSize: 15,
-      fontWeight: 'bold',
-    },
-    title: {
-      textAlign: 'center', // <-- the magic
-      color : "#fff",
-      padding : 10,
-      fontSize: 20,
-      fontWeight: 'bold',
-    },
-    container2: {
-      height: 150,
-    },
-    page: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
+  container: {
+    flex: 1,
+    padding: 12,
+  },
+  categoryContainer: {
+    marginBottom: 24,
+  },
+  categoryHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  left: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  categoryTitle: {
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  badgeText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+  carCard: {
+    width: windowWidth * 0.7,
+    marginRight: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#1A1A1A',
+    paddingBottom: 8,
+  },
+  card: {
+    width: windowWidth * 0.8,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    marginRight: 16,
+  },
+  image: {
+    width: '100%',
+    height: 220,
+  },
+  infoContainer: {
+    padding: 10,
+  },
+  carName: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 4,
+  },
+  textContainer: {
+    flexDirection: 'row', // Sépare les colonnes horizontalement
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    marginTop: 10,
+  },
+  leftColumn: {
+    flex: 1, // Occupe la moitié de l'espace horizontal
+    flexDirection: 'column',
+    marginRight: 10,
+    alignSelf: 'flex-start',
+  },
+  rightColumn: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  row: {
+    flexDirection: 'row',
+    marginBottom: 5,
+    alignItems: 'flex-start',
+  },
+  label: {
+    fontSize: 13,
+    color: '#555',
+  },
+  description: {
+    paddingBottom: 10,
+  },
+  value: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#007AFF', // bleu style iOS
+  },
+  chargement: {
+    alignSelf: 'center',
+  },
+  headerCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  username: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  postTime: {
+    fontSize: 12,
+    color: 'gray',
+  },
+  likesContainer: {
+    alignItems: 'center',
+  },
+  likesText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: 'red',
+  },
+  likesLabel: {
+    fontSize: 12,
+    color: 'gray',
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  categoryItem: {
+    alignItems: 'center',
+    width: 80,
+  },
+  iconContainer: {
+    width: 45,
+    height: 45,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryName: {
+    fontSize: 12,
+    color: 'gray',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  categoryCount: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
 });
+
+export default GaragePage;

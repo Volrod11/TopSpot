@@ -6,11 +6,10 @@ import { CameraScreenStackParamList } from "../../types";
 
 const CameraScreenStack = createStackNavigator<CameraScreenStackParamList>();
 
-const CameraScreenNavigation = ({ route }) => {
-    const { user_id } = route.params;
+const CameraScreenNavigation = () => {
     return (
         <CameraScreenStack.Navigator>
-            <CameraScreenStack.Screen name="CameraScreen" component={CameraScreen} initialParams={{ user_id }} />
+            <CameraScreenStack.Screen name="CameraScreen" component={CameraScreen} />
             <CameraScreenStack.Screen name="PhotoDetailsScreen" component={PhotoDetailsScreen} />
         </CameraScreenStack.Navigator>
     );

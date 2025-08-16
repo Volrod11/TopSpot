@@ -22,7 +22,7 @@ const PicturesRoute = (userId : string) => () => (
     <PicturesPage user_id={userId} />
 );
 const GaragesRoute = (userId : string) => () => (
-    <GaragesPage user_id={userId}/>
+    <GaragesPage user_id={null} is_garages_page_menu={false}/>
 );
 
 const TabViewProfile: React.FC<TabViewProfileProps> = ({ user_id }) => {

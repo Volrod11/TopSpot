@@ -1,55 +1,51 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, Dimensions  } from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get("window").width;
 
 
-export default function MyGarageCard() {
+const MyGarageCard = ({ garage_with_pictures }) => {
+  
   return (
-    <View style={[styles.card,{width: screenWidth - 24}]}>
+    <View style={[styles.card, { width: screenWidth - 24 }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <Image
-            source={{ uri: "https://randomuser.me/api/portraits/men/32.jpg" }}
+            source={garage_with_pictures.avatar_url === null ?
+              require('../../../assets/no_picture.png')
+              : { uri: garage_with_pictures.avatar_url }}
             style={styles.avatar}
           />
           <Text style={styles.title}>Mon Garage</Text>
         </View>
         <View style={styles.likes}>
           <Ionicons name="heart" size={16} color="red" />
-          <Text style={styles.likesText}>247</Text>
+          <Text style={styles.likesText}>{garage_with_pictures.total_likes}</Text>
         </View>
       </View>
 
       {/* Categories grid */}
       <View style={styles.grid}>
-        {[
-          {
-            name: "Supercars",
-            uri: "https://aosttdzezofbyaimkdnd.supabase.co/storage/v1/object/public/pictures//mustang.jpg",
-          },
-          {
-            name: "Muscle Cars",
-            uri: "https://aosttdzezofbyaimkdnd.supabase.co/storage/v1/object/public/pictures//mustang.jpg",
-          },
-          {
-            name: "Off-Road",
-            uri: "https://aosttdzezofbyaimkdnd.supabase.co/storage/v1/object/public/pictures//mustang.jpg",
-          },
-          null, // Empty category
-        ].map((cat, index) =>
-          cat ? (
-            <View key={index} style={styles.category}>
-              <Image source={{ uri: cat.uri }} style={styles.image} />
+        {Array.isArray(garage_with_pictures.top_pictures_by_category) && garage_with_pictures.top_pictures_by_category.map((_pic: any, idx: any) =>
+          _pic.id !== null ? (
+            <View key={idx} style={styles.category}>
+              <Image
+              source={{ uri: _pic.url }}
+               style={styles.image} />
               <View style={styles.overlay}>
-                <Text style={styles.overlayText}>{cat.name}</Text>
+                <Text style={styles.overlayText}>{_pic.car_type}</Text>
               </View>
             </View>
           ) : (
-            <View key={index} style={styles.emptyCategory}>
-              <Text style={styles.emptyText}>Électriques</Text>
+            <View key={idx} style={[styles.category, {backgroundColor: "#D4D4D4"}]}>
+              <Image
+              source={ require('../../../assets/no_picture.png') }
+               style={styles.noImage} />
+              <View style={styles.overlay}>
+                <Text style={styles.overlayText}>{_pic.car_type}</Text>
+              </View>
             </View>
           )
         )}
@@ -110,6 +106,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 6,
     marginBottom: 8,
+    backgroundColor: "#f9f9f9",
   },
   category: {
     width: "48%",
@@ -120,6 +117,11 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+  },
+  noImage: {
+    height: '100%',
+    aspectRatio: 1, 
+    alignSelf: 'center',
   },
   overlay: {
     position: "absolute",
@@ -158,3 +160,6 @@ const styles = StyleSheet.create({
     color: "#3b82f6",
   },
 });
+
+
+export default MyGarageCard;

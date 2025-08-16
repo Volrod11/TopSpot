@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Image, Pressable, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
-import { CameraScreenStackParamList, RootStackParamList } from "../../../types";
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, StyleSheet, Image, Pressable, Modal } from 'react-native';
+import { CameraScreenStackParamList } from "../../../types";
 import { RouteProp } from "@react-navigation/native";
 import { supabase } from "../../../lib/supabase";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { FlatList, ScrollView, TextInput } from "react-native-gesture-handler";
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
+import { useUser } from "../../../context/UserContext";
 
 type PhotoDetailsScreenRouteProp = RouteProp<CameraScreenStackParamList, 'PhotoDetailsScreen'>;
 type PhotoDetailsScreenNavigationProp = StackNavigationProp<CameraScreenStackParamList, 'PhotoDetailsScreen'>;
@@ -102,7 +102,7 @@ const fetchModels = async (marque: string) => {
 
 
 const PhotoDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
-    const { user_id } = route.params;
+    const { currentUserId } = useUser();
     const { picture } = route.params;
     const [modalBrandsVisible, setModalBrandsVisible] = React.useState<boolean>(false);
     const [modalModelsVisible, setModalModelsVisible] = React.useState<boolean>(false);
@@ -157,7 +157,7 @@ const PhotoDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
     const savePictureAndInfos = async () => {
         const carId = getCarId();
 
-        await addPictureToDatabase(picture, user_id, await carId, description);
+        await addPictureToDatabase(picture, currentUserId, await carId, description);
     }
 
 
@@ -232,9 +232,7 @@ const PhotoDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
                 <Pressable
                     onPress={async () => {
                         await savePictureAndInfos();
-                        navigation.navigate('CameraScreen', {
-                            user_id: route.params.user_id,
-                        })
+                        navigation.navigate('CameraScreen')
                     }}
                     style={({ pressed }) => [
                         styles.button,

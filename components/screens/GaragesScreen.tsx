@@ -15,6 +15,7 @@ import FourPictures from '../HomeComponent/components/FourPictures';
 import { FlatList } from 'react-native-gesture-handler';
 import MiniGarageCard from '../GarageComponent/components/MiniGarageCard';
 import { Ionicons } from '@expo/vector-icons';
+import LastsSpots from '../HomeComponent/components/LastsSpots';
 
 
 const PlaceholderImage = require('../../assets/topspottitle.png');
@@ -48,9 +49,9 @@ const data = [
 ];
 
 
-const GarageScreen = () => {
+const GaragesScreen = () => {
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <View style={styles.header_container}>
                 {/* Top Header */}
                 <View style={styles.topHeader}>
@@ -71,8 +72,8 @@ const GarageScreen = () => {
                     <Text style={styles.dateText}>Janvier 2024</Text>
                 </View>
             </View>
-
-            <GaragesPage user_id={null}/>
+            
+            <GaragesPage user_id = {null} is_garages_page_menu = {true} />
             
         </View>
     );
@@ -86,7 +87,7 @@ export default function GarageStackScreen() {
         <GarageStack.Navigator screenOptions={{
             headerShown: false
         }} >
-            <GarageStack.Screen name="GarageScreen" component={GarageScreen} />
+            <GarageStack.Screen name="GaragesScreen" component={GaragesScreen} />
             <GarageStack.Screen name="GaragePage" component={GaragePage} options={{
                 headerShown: true,
                 headerBackTitle: 'Back',

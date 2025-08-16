@@ -1,37 +1,48 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { RootStackParamList } from '../../../types';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
 
-const MiniGarageCard = ({ garage_with_pictures, car_types }) => {
-  //console.log(garage_with_pictures.top_pictures_by_category[1].picture_url);
+
+type PicturesPageNavigationProp = StackNavigationProp<RootStackParamList, 'GaragePage'>;
+
+
+const MiniGarageCard = ({ garage_with_pictures }) => {
+
+  const navigation = useNavigation<PicturesPageNavigationProp>();
 
   return (
     <View style={styles.card}>
-      {/* 4 photos en grille 2x2 */}
-      <View style={styles.photoGrid}>
-        {Array.isArray(garage_with_pictures.top_pictures_by_category) && garage_with_pictures.top_pictures_by_category.map((_pic: any, idx: any) => (
-          <Image key={idx} source={
-          _pic.id === null
-            ? require('../../../assets/no_picture.png')
-            : { uri: _pic.url }
-        } style={styles.photo} />
-        ))}
-      </View>
-
-      {/* Infos utilisateur */}
-      <View style={styles.infoRow}>
-        <Image source={{ uri: garage_with_pictures.avatar_url }} style={styles.avatar} />
-        <Text style={styles.username}>@{garage_with_pictures.username}</Text>
-      </View>
-
-      {/* Footer avec catégories et likes */}
-      <View style={styles.footer}>
-        <Text style={styles.categoriesText}>{garage_with_pictures.nb_categories}/4</Text>
-        <View style={styles.likesRow}>
-          <Ionicons name="heart" size={16} color="red" />
-          <Text style={styles.likesText}>{garage_with_pictures.total_likes}</Text>
+      <Pressable onPress={() => navigation.navigate('GaragePage', { garage_id : garage_with_pictures.garage_id })}>
+        {/* 4 photos en grille 2x2 */}
+        <View style={styles.photoGrid}>
+          {Array.isArray(garage_with_pictures.top_pictures_by_category) && garage_with_pictures.top_pictures_by_category.map((_pic: any, idx: any) => (
+            <Image key={idx} source={
+              _pic.id === null
+                ? require('../../../assets/no_picture.png')
+                : { uri: _pic.url }
+            } style={styles.photo} />
+          ))}
         </View>
-      </View>
+
+        {/* Infos utilisateur */}
+        <View style={styles.infoRow}>
+          <Image source={garage_with_pictures.avatar_url === null
+            ? require('../../../assets/no_picture.png') : { uri: garage_with_pictures.avatar_url }} style={styles.avatar} />
+          <Text style={styles.username}>@{garage_with_pictures.username}</Text>
+        </View>
+
+        {/* Footer avec catégories et likes */}
+        <View style={styles.footer}>
+          <Text style={styles.categoriesText}>{garage_with_pictures.nb_categories}/4</Text>
+          <View style={styles.likesRow}>
+            <Ionicons name="heart" size={16} color="red" />
+            <Text style={styles.likesText}>{garage_with_pictures.total_likes}</Text>
+          </View>
+        </View>
+      </Pressable>
     </View>
   );
 };
@@ -56,13 +67,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   photo: {
-  width: 80,
-  height: 80,
-  marginBottom: 2,
-  borderRadius: 6,
-  backgroundColor: '#ccc', // debug visuel
-}
-,
+    width: 79,
+    height: 79,
+    marginBottom: 2,
+    borderRadius: 6,
+    backgroundColor: '#ccc', // debug visuel
+  }
+  ,
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -99,4 +110,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MiniGarageCard;
+export default React.memo(MiniGarageCard);

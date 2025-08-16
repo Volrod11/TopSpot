@@ -3,7 +3,7 @@ export type RootStackParamList = {
     PicturesPage: { user_id: string };
     ProfileScreen: { user_id: string };
     PicturePage: { idPicture: string, picture: string };
-    Garage: { garage_id: string };
+    GaragesPage: { garage_id: string };
     GaragePage: { garage_id: string };
     TabScreen: { user_id: string };
 };
@@ -21,6 +21,6 @@ export type ProfileScreenStackParamList = {
 };
 
 export type CameraScreenStackParamList = {
-    CameraScreen: { user_id: string };
-    PhotoDetailsScreen: { picture: string, user_id: string };
+    PhotoDetailsScreen: { picture: string };
+    CameraScreen: {};
 };
