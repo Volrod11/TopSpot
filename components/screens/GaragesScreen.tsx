@@ -16,6 +16,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import MiniGarageCard from '../GarageComponent/components/MiniGarageCard';
 import { Ionicons } from '@expo/vector-icons';
 import LastsSpots from '../HomeComponent/components/LastsSpots';
+import EventsHeader from '../GeneralComponent/Header';
 
 
 const PlaceholderImage = require('../../assets/topspottitle.png');
@@ -54,27 +55,22 @@ const GaragesScreen = () => {
         <View style={{ flex: 1 }}>
             <View style={styles.header_container}>
                 {/* Top Header */}
-                <View style={styles.topHeader}>
-                    <Text style={styles.garagesText}>Garages</Text>
-                    <View style={styles.iconContainer}>
-                        <TouchableOpacity style={styles.iconButton}>
-                            <Ionicons name="search" size={24} color="black" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.iconButton}>
-                            <Ionicons name="funnel" size={24} color="black" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                <EventsHeader
+                    pageName="Garages"
+                    onSearchPress={() => console.log("Recherche")}
+                    onFilterPress={() => console.log("Filtre")}
+                />
 
-                {/* Bottom Section */}
-                <View style={styles.bottomSection}>
-                    <Text style={styles.garageDuMoisText}>Garage du Mois</Text>
-                    <Text style={styles.dateText}>Janvier 2024</Text>
-                </View>
+
             </View>
-            
-            <GaragesPage user_id = {null} is_garages_page_menu = {true} />
-            
+
+            <View style={styles.secondHeader}>
+                <Text style={styles.garageDuMoisText}>Garage du Mois</Text>
+                <Text style={styles.dateText}>Janvier 2024</Text>
+            </View>
+        
+            <GaragesPage user_id={null} is_garages_page_menu={true} />
+
         </View>
     );
 };
@@ -107,17 +103,18 @@ export default function GarageStackScreen() {
 
 const styles = StyleSheet.create({
     header_container: {
-        padding: 16,
-        paddingTop: 50,
+        paddingHorizontal: 16,
         backgroundColor: '#fff', // Or your desired background color
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
     },
-    topHeader: {
+    secondHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 8,
+        paddingHorizontal: 16,
+        paddingTop: 16,
     },
     garagesText: {
         fontSize: 24,
@@ -145,7 +142,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
     },
-    
+
 
 });
 

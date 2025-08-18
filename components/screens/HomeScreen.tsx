@@ -22,6 +22,7 @@ import Garage from '../HomeComponent/components/Garage';
 import LastsSpots from '../HomeComponent/components/LastsSpots';
 import Picture from '../HomeComponent/components/Picture';
 import SuggestedProfiles from '../HomeComponent/components/SuggestedProfiles';
+import { supabase } from '../../lib/supabase';
 
 /*
 
@@ -33,6 +34,28 @@ import SuggestedProfiles from '../HomeComponent/components/SuggestedProfiles';
 
 
 const PlaceholderImage = require('../../assets/topspottitle.png');
+
+
+type HomepageContent = {
+    id: string;
+    type: 'garage' | 'picture' | 'event';
+    title: string;
+    filters: JSON;
+}
+
+
+
+const fetchHomepageContents = async () => {
+    const {data, error } = await supabase
+    .rpc('get_random_sections', { per_type: 3 });
+    if (error) {
+        console.error('Error fetching homepage contents:', error);
+        return [];
+    }
+
+    return data as HomepageContent[];
+}
+
 
 function HomeScreen({ navigation }) {
     return (
