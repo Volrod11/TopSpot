@@ -4,8 +4,8 @@ import { View, StyleSheet, Image, Pressable, FlatList, ListRenderItem  } from 'r
 import { useNavigation } from '@react-navigation/native';
 import { useState, useEffect } from 'react'
 import { StackNavigationProp } from '@react-navigation/stack';
-import { supabase } from '../../../lib/supabase';
-import { RootStackParamList } from '../../../types';
+import { supabase } from '../../lib/supabase';
+import { RootStackParamList } from '../../types';
 
 type PicturesPageProps  = {
   user_id?: string;
@@ -14,12 +14,27 @@ type PicturesPageNavigationProp = StackNavigationProp<RootStackParamList, 'Pictu
 
 
 type Picture = {
-  id: string;
-  picture: string;
+  picture_id: string;
+  picture_url: string;
 };
 
+
+const fetchPictures = async (user_id: string ) => {
+  console.log("Fetching pictures for user_id: ", user_id);
+  
+  const { data, error } = await supabase
+  .rpc("get_user_pictures", { p_user_id: user_id });
+  if (error) {
+    console.error("Error fetching pictures: ", error);
+    return [];
+  }
+
+  return data as Picture[];
+}
+
+
 const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
-  const [pictures, setPictures] = useState<{ id: string; picture: string }[]>([])
+  const [pictures, setPictures] = useState<Picture[]>([])
 
 
   const navigation = useNavigation<PicturesPageNavigationProp>();
@@ -29,24 +44,12 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
   };
 
   useEffect(() => {
-    async function getPicturesFromUser() {
-      if (user_id === null) {
-        const { data, error } = await supabase.from("pictures").select("id, picture");
-        if (error) {
-          console.error("Error fetching pictures: ", error);
-        }
-        
-        setPictures(data ?? []);
-      } else if(user_id !== null) {
-        const { data, error } = await supabase.from("pictures").select("id, picture").eq('user_id', user_id);
-        if (error) {
-          console.error("Error fetching pictures: ", error);
-        }
-        setPictures(data ?? []);
-      }
+    async function getPictures() {
+      const fetchedPictures = await fetchPictures(user_id);
+      setPictures(fetchedPictures);
     }
 
-    getPicturesFromUser();
+    getPictures();
   }, []);
   
 
@@ -55,8 +58,8 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
   }, [pictures]);
 
   const renderItem: ListRenderItem<Picture> = ({ item }) => (
-    <Pressable key={item.id} onPress={() => goToPicturePages(item.id, item.picture)} style={styles.bouton}>
-      <Image source={{ uri: item.picture }} style={styles.image} />
+    <Pressable key={item.picture_id} onPress={() => goToPicturePages(item.picture_id, item.picture_url)} style={styles.bouton}>
+      <Image source={{ uri: item.picture_url }} style={styles.image} />
     </Pressable>
   );
 
@@ -64,7 +67,7 @@ const PicturesPage: React.FC<PicturesPageProps> = ({user_id = null}) => {
     <View style={styles.picturesPage}>
       <FlatList
         data={pictures}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.picture_id}
         renderItem={renderItem}
         initialNumToRender={10}
         maxToRenderPerBatch={5}
@@ -83,7 +86,7 @@ export default PicturesPage;
 const styles = StyleSheet.create({
   picturesPage: {
     flex: 1,
-    backgroundColor: '#0D0D0D',
+    backgroundColor: '#fff',
   },
   container: {
     justifyContent: 'center',

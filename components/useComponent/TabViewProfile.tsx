@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PicturesPage from '../pages/PicturesPage';
 import PicturePage from '../pages/PicturePage';
 import GaragesPage from '../pages/GaragesPage';
+import { useUser } from '../../context/UserContext';
 
 
 
@@ -18,14 +19,15 @@ type State = {
   routes: { key: string; title: string }[];
 };
 
-const PicturesRoute = (userId : string) => () => (
-    <PicturesPage user_id={userId} />
+const PicturesRoute = (userId: string) => () => (
+  <PicturesPage user_id={userId} />
 );
-const GaragesRoute = (userId : string) => () => (
-    <GaragesPage user_id={null} is_garages_page_menu={false}/>
+const GaragesRoute = (userId: string) => () => (
+  <GaragesPage user_id={userId} is_garages_page_menu={false} />
 );
 
-const TabViewProfile: React.FC<TabViewProfileProps> = ({ user_id }) => {
+const TabViewProfile: React.FC = () => {
+  const { currentUserId } = useUser();
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
     { key: 'pictures', title: 'Photos' },
@@ -36,13 +38,17 @@ const TabViewProfile: React.FC<TabViewProfileProps> = ({ user_id }) => {
     <TabView
       navigationState={{ index, routes }}
       renderScene={SceneMap({
-        pictures: PicturesRoute(user_id),
-        garages: GaragesRoute(user_id),
+        pictures: PicturesRoute(currentUserId),
+        garages: GaragesRoute(currentUserId),
       })}
       onIndexChange={setIndex}
       initialLayout={{ width: Dimensions.get('window').width }}
       style={styles.container}
-      renderTabBar={props => <TabBar {...props} style={styles.tab_bar} indicatorStyle={styles.tab_bar_selected}/>}
+      renderTabBar={props =>
+        <TabBar {...props}
+          style={styles.tab_bar}
+          indicatorStyle={styles.tab_bar_selected}
+          labelStyle={{ color: 'black' }} />}
     />
   );
 };
@@ -59,7 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tab_bar: {
-    backgroundColor: "#0D0D0D",
+    backgroundColor: "#fff",
     marginBottom: 1,
   },
   tab_bar_selected: {

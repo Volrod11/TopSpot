@@ -5,9 +5,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import PicturesPage from '../HomeComponent/pages/PicturesPage';
-import PicturePage from '../HomeComponent/pages/PicturePage';
-import TestPage from '../HomeComponent/pages/PicturePage';
+import PicturesPage from '../pages/PicturesPage';
+import PicturePage from '../pages/PicturePage';
+import TestPage from '../pages/PicturePage';
 
 import MonthlyGarage from '../HomeComponent/components/MonthlyGarage';
 import WeeklyPic from '../HomeComponent/components/WeeklyPic';
@@ -57,7 +57,7 @@ const fetchHomepageContents = async () => {
 }
 
 
-function HomeScreen({ navigation }) {
+function HomeScreen() {
     return (
         <View style={styles.homePage}>
             <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>

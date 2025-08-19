@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import React from 'react'
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { Session } from '@supabase/supabase-js'
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 type User = {
     id: string;

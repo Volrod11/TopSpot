@@ -2,14 +2,14 @@ import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, StyleSheet, Image, TouchableHighlight, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Animated, PanResponder, FlatList, Keyboard, Dimensions, ListRenderItem } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../../types';
-import { supabase } from '../../../lib/supabase';
+import { RootStackParamList } from '../../types';
+import { supabase } from '../../lib/supabase';
 import { useState, useEffect, useRef } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const defaultPdp = require('../../../assets/default_pfp.png');
+const defaultPdp = require('../../assets/default_pfp.png');
 
 
 //Type
@@ -691,7 +691,7 @@ export default PicturePage;
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#0D0D0D',
+      backgroundColor: '#fff',
     },
     scrollView: {
       justifyContent: 'center',

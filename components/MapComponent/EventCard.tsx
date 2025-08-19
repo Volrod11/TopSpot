@@ -7,14 +7,13 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
-export default function EventCard({ date, title, location, time, participants, tags }) {
-  console.log("tags", tags);
+export default function EventCard({ date, title, location, time, participants, gradient, tags }) {
   
   return (
     <View style={styles.card}>
       {/* Date */}
       <LinearGradient
-        colors={["#F97316", "#EF4444"]} // orange → rouge
+        colors={[gradient[0], gradient[1]]} // orange → rouge
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.dateBox}

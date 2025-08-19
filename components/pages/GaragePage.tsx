@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Text, View, StyleSheet, Image, ScrollView, FlatList, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../../types';
-import { supabase } from '../../../lib/supabase';
+import { RootStackParamList } from '../../types';
+import { supabase } from '../../lib/supabase';
 import { useState, useEffect } from 'react';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
@@ -174,7 +174,7 @@ const HeaderCard = ({ headerInfos, carTypes, isLikedGarage }: { headerInfos: Hea
       <View style={styles.header}>
         <Image source={
           headerInfos.avatar_url === null
-            ? require('../../../assets/no_picture.png') :
+            ? require('../../assets/no_picture.png') :
             { uri: headerInfos.avatar_url }
         } style={styles.avatar} />
         <View style={styles.userInfo}>

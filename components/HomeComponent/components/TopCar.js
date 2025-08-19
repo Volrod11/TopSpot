@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 
-import TestPage from '../pages/PicturePage';
+import TestPage from '../../pages/PicturePage';
 
 const PlaceholderImage = require('../../../assets/images/r8.png');
 

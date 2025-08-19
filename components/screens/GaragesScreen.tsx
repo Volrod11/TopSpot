@@ -4,8 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import GaragesPage from '../HomeComponent/pages/GaragesPage';
-import GaragePage from '../HomeComponent/pages/GaragePage';
+import GaragesPage from '../pages/GaragesPage';
+import GaragePage from '../pages/GaragePage';
 
 import Garage from '../HomeComponent/components/GarageAncien';
 import WeeklyPic from '../HomeComponent/components/WeeklyPic';
@@ -15,8 +15,10 @@ import FourPictures from '../HomeComponent/components/FourPictures';
 import { FlatList } from 'react-native-gesture-handler';
 import MiniGarageCard from '../GarageComponent/components/MiniGarageCard';
 import { Ionicons } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import LastsSpots from '../HomeComponent/components/LastsSpots';
 import EventsHeader from '../GeneralComponent/Header';
+import SegmentedButtons from '../GeneralComponent/SegmentedButtons';
 
 
 const PlaceholderImage = require('../../assets/topspottitle.png');
@@ -64,9 +66,14 @@ const GaragesScreen = () => {
 
             </View>
 
+            <SegmentedButtons/>
             <View style={styles.secondHeader}>
-                <Text style={styles.garageDuMoisText}>Garage du Mois</Text>
-                <Text style={styles.dateText}>Janvier 2024</Text>
+                
+                <Text style={styles.garageDuMoisText}>Garage Janvier 2024</Text>
+                <View style={styles.date}>
+                    <MaterialCommunityIcons name="clock" size={16} color="#F7EA1A" />
+                    <Text style={styles.dateText}> Janvier 2024</Text>
+                </View>
             </View>
         
             <GaragesPage user_id={null} is_garages_page_menu={true} />
@@ -115,6 +122,9 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         paddingHorizontal: 16,
         paddingTop: 16,
+    },
+    date: {
+        flexDirection: 'row',
     },
     garagesText: {
         fontSize: 24,

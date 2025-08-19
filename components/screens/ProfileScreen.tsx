@@ -8,14 +8,16 @@ import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 
-import TabViewProfile from '../HomeComponent/useComponent/TabViewProfile';
+import TabViewProfile from '../useComponent/TabViewProfile';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useUser } from '../../context/UserContext';
+import ProfileHeader from '../ProfileComponent/ProfileHeader';
 
 const defaultPdp = require('../../assets/default_pfp.png');
 const Tab = createStackNavigator<RootStackParamList>();
 
 // Type
-type ProfileScreenRouteProp = RouteProp<ProfileScreenStackParamList, 'ProfileScreen'>;
+
 type SettingsNavigationProp = StackNavigationProp<ProfileScreenStackParamList, 'Settings'>;
 
 type RootStackParamList = {
@@ -52,22 +54,22 @@ const getUsernameAndAvatarUrlFromProfiles = async (profile_id: string): Promise<
     return profileData;
 }
 
-const ProfileScreen: React.FC<{ route: ProfileScreenRouteProp }> = ({ route }) => {
-    const { user_id } = route.params; 
+const ProfileScreen: React.FC = () => {
+    const { currentUserId } = useUser();
     const [userProfile, setUserProfile] = useState<Profile | null>(null);
 
     const navigation = useNavigation<SettingsNavigationProp>();
 
     useEffect(() => {
-        if (user_id) {
+        if (currentUserId) {
             const fetchPictureProfile = async () => {
-                const profile = await getUsernameAndAvatarUrlFromProfiles(user_id);
+                const profile = await getUsernameAndAvatarUrlFromProfiles(currentUserId);
                 setUserProfile(profile);
             };
 
             fetchPictureProfile();
         }
-    }, [user_id]);
+    }, [currentUserId]);
 
     const goToSettings= () => {
         navigation.navigate('Settings');
@@ -75,18 +77,8 @@ const ProfileScreen: React.FC<{ route: ProfileScreenRouteProp }> = ({ route }) =
 
     return (
         <View style={styles.profile_page}>
-            <View style={styles.topButtons}>
-                <TouchableOpacity onPress={goToSettings} style={styles.btnNormal}>
-                    <Ionicons name="ellipsis-horizontal" size={30} color="white" />
-                </TouchableOpacity>
-            </View>
-            <View style={styles.info_user}>
-                <View style={styles.profile_image}>
-                    {userProfile ? ( <Image source={userProfile.avatar_url ? { uri: userProfile.avatar_url } : defaultPdp} style={styles.image} />) : null}
-                </View>
-                {userProfile && <Text style={styles.user_name}>{userProfile.username}</Text>}
-            </View>
-            {user_id && <TabViewProfile user_id={user_id} />}
+            <ProfileHeader/>
+            {currentUserId && <TabViewProfile />}
         </View>
     );
 }
@@ -99,7 +91,7 @@ export default ProfileScreen;
 const styles = StyleSheet.create({
     profile_page: {
         flex: 1,
-        backgroundColor: "#0D0D0D",
+        backgroundColor: "#fff",
     },
     topButtons: {
         flex:0.15,
@@ -110,7 +102,7 @@ const styles = StyleSheet.create({
     text: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: "#fff",
+        color: "#0D0D0D",
     },
     profile_image: {
         height: 100,
@@ -128,7 +120,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     user_name: {
-        color: "#fff",
+        color: "#0D0D0D",
         padding: 10,
         fontSize: 15,
         fontWeight: 'bold',

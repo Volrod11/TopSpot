@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { useEffect, useState } from 'react';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 
-import MiniGarageCard from '../../GarageComponent/components/MiniGarageCard';
-import MyGarageCard from '../../GarageComponent/components/MyGarageCard';
-import { useUser } from '../../../context/UserContext';
-import LastsSpots from '../components/LastsSpots';
+import MiniGarageCard from '../GarageComponent/components/MiniGarageCard';
+import MyGarageCard from '../GarageComponent/components/MyGarageCard';
+import { useUser } from '../../context/UserContext';
+import LastsSpots from '../HomeComponent/components/LastsSpots';
 
 
 const data = [
@@ -67,6 +67,7 @@ type Garage_with_pictures = {
 //Const Function
 const fetchGaragesFromDatabase = async (user_id: string | null, is_garages_page_menu: boolean) => {
 
+    
     const { data: Garage_with_pictures, error } = await supabase
         .rpc("get_garages_and_car_types_with_details", { profile_param: user_id, is_current_user: is_garages_page_menu });
     if (error) {
@@ -84,7 +85,6 @@ const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, is_garages_page_menu
     const [myGarage, setMyGarage] = useState<Garage_with_pictures[]>([])
 
     const { currentUserId } = useUser();
-    const navigation = useNavigation();
 
 
 
@@ -96,15 +96,16 @@ const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, is_garages_page_menu
 
             setGarages(fetchedGarages);
             setMyGarage(fetchedMyGarage);
+            
         };
 
         fetchData();
     }, []);
-    
-    
+
+
     return (
         <View style={styles.main_style}>
-            {myGarage.length > 0 && garages.length > 0 ? (
+            { garages.length > 0 ? (
                 <View style={{ flex: 1 }}>
                     <FlatList
                         style={{ flex: 1 }}
@@ -114,13 +115,11 @@ const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, is_garages_page_menu
                         columnWrapperStyle={styles.row}
                         contentContainerStyle={{ padding: 12, flexGrow: 1 }}
                         ListHeaderComponent={
-                            <>
-                                {myGarage.length > 0 && (
-                                    <View style={styles.myGarageCard}>
-                                        <MyGarageCard garage_with_pictures={myGarage[0]} />
-                                    </View>
-                                )}
-                            </>
+                            is_garages_page_menu ? (
+                                <View style={styles.myGarageCard}>
+                                    <MyGarageCard garage_with_pictures={myGarage[0]} />
+                                </View>
+                            ) : null
                         }
                         renderItem={({ item }) => (<MiniGarageCard garage_with_pictures={item} />)}
                     />
@@ -144,11 +143,11 @@ const styles = StyleSheet.create({
     },
     garagePage: {
         flex: 1,
-        backgroundColor: "#0D0D0D",
+        backgroundColor: "#fff",
     },
     container: {
         flex: 1,
-        backgroundColor: '#0D0D0D',
+        backgroundColor: '#fff',
         flexDirection: 'row',
         flexWrap: 'wrap',
         alignItems: 'flex-start',

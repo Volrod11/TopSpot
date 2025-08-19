@@ -3,9 +3,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { ProfileScreenStackParamList } from '../../types';
 
 import ProfileScreen from '../screens/ProfileScreen';
-import PicturePage from '../HomeComponent/pages/PicturePage';
-import GaragePage from '../HomeComponent/pages/GaragePage';
-import Settings from '../HomeComponent/pages/Settings';
+import PicturePage from '../pages/PicturePage';
+import GaragePage from '../pages/GaragePage';
+import Settings from '../pages/Settings';
 
 const ProfileScreenStack = createStackNavigator<ProfileScreenStackParamList>();
 

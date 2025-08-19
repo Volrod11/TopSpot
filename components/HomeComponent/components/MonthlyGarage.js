@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import TestPage from '../pages/PicturePage';
+import TestPage from '../../pages/PicturePage';
 
 
 export default function MonthlyGarage() {

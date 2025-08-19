@@ -24,6 +24,7 @@ const events = [
     location: "Port de Marseille",
     time: "16h00 - 20h00",
     participants: 67,
+    gradient: ["#377BF2", "#2054DB"],
     tags:
       [
         { label: "JDM", color: "#F3E8FF", fontColor: "#7E22CE" },
@@ -37,6 +38,7 @@ const events = [
     location: "Porte de Versailles",
     time: "10h00 - 18h00",
     participants: 150,
+    gradient: ["#A450F3", "#8227D2"],
     tags:
       [
         { label: "Supercar", color: "#FEE2E2", fontColor: "#B91C1C" },
@@ -50,6 +52,7 @@ const events = [
     location: "Monaco",
     time: "08h00 - 20h00",
     participants: 200,
+    gradient: ["#F97316", "#EF4444"],
     tags:
       [
         { label: "Rally", color: "#FEF3C9", fontColor: "#BB5309" },

@@ -47,11 +47,11 @@ function MainContainer() {
 
                         } else if (rn === garageName) {
                             iconName = focused ? 'garage' : 'garage';
-                            size = 30;
+                            size = 25;
 
                         } else if (rn === cameraName) {
                             iconName = focused ? 'add-circle' : 'add-circle-outline';
-                            size = 50;
+                            size = 40;
 
                         } else if (rn === mapName) {
                             iconName = focused ? 'map' : 'map-outline';
@@ -75,10 +75,11 @@ function MainContainer() {
                     "tabBarInactiveTintColor": "grey",
                     "tabBarStyle": {
                         backgroundColor: '#FFFFFF',
-                        height: 110,
+                        height: 90,
                         display: route.name === cameraName ? 'none' : 'flex',
                     },
                     "headerShown": false,
+                    tabBarShowLabel: false,
                 })}
             >
 
