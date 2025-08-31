@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Pressable, TouchableOpacity } from 'react-native';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -14,11 +14,13 @@ import SharedPicture from '../HomeComponent/components/SharedPicture';
 import FourPictures from '../HomeComponent/components/FourPictures';
 import { FlatList } from 'react-native-gesture-handler';
 import MiniGarageCard from '../GarageComponent/components/MiniGarageCard';
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import LastsSpots from '../HomeComponent/components/LastsSpots';
 import EventsHeader from '../GeneralComponent/Header';
 import SegmentedButtons from '../GeneralComponent/SegmentedButtons';
+import { useUser } from "../../context/UserContext";
+import SearchBarWithFilter from "../GeneralComponent/SearchBar";
 
 
 const PlaceholderImage = require('../../assets/topspottitle.png');
@@ -53,30 +55,124 @@ const data = [
 
 
 const GaragesScreen = () => {
+    const { currentUserId } = useUser();
+    const [selected, setSelected] = useState("Du Mois");
+    const [nbGarages, setNbGarages] = useState(0);
+    const [searchText, setSearchText] = useState('');
+
+    // --- Calculs dynamiques ---
+    const now = new Date();
+
+    // Obtenir le mois en toutes lettres
+    const rawMonthName = now.toLocaleString("fr-FR", { month: "long" });
+    const monthName = rawMonthName.charAt(0).toUpperCase() + rawMonthName.slice(1);
+
+    const year = now.getFullYear();
+
+    // Calcul des jours restants dans le mois
+    const endOfMonth = new Date(year, now.getMonth() + 1, 0); // dernier jour du mois
+    const daysLeftMonth = Math.ceil(
+        (endOfMonth.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Calcul des jours restants dans l'année
+    const endOfYear = new Date(year, 11, 31);
+    const daysLeftYear = Math.ceil(
+        (endOfYear.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Texte principal et sous-texte
+    let title = "";
+    let subtitle = "";
+    let color = "";
+
+    if (selected === "Du Mois") {
+        title = `Garage ${monthName} ${year}`;
+        if (daysLeftMonth < 1) {
+            subtitle = `Dernier jour !`;
+        } else {
+            subtitle = `${daysLeftMonth} j restants`;
+        }
+
+        if (daysLeftMonth <= 3) {
+            color = "#DC3545"; // Rouge
+        } else if (daysLeftMonth <= 7) {
+            color = "#FFA500"; // Orange
+        } else {
+            color = "#28A745"; // Vert
+        }
+    } else if (selected === "De l'année") {
+        title = `Garage ${year}`;
+        if (daysLeftYear < 1) {
+            subtitle = `Dernier jour !`;
+        } else {
+            subtitle = `${daysLeftYear} j restants`;
+        }
+        if (daysLeftYear <= 30) {
+            color = "#DC3545"; // Rouge
+        } else if (daysLeftYear <= 90) {
+            color = "#FFA500"; // Orange
+        } else {
+            color = "#28A745"; // Vert
+        }
+    } else if (selected === "Annuels") {
+        title = `Garages Annuels`;
+        if (daysLeftYear < 1) {
+            subtitle = `Dernier jour !`;
+        } else {
+            subtitle = `${daysLeftYear} j restants`;
+        }
+        if (daysLeftYear <= 30) {
+            color = "#DC3545"; // Rouge
+        } else if (daysLeftYear <= 90) {
+            color = "#FFA500"; // Orange
+        } else {
+            color = "#28A745"; // Vert
+        }
+    } else {
+        title = "Garages Mensuels";
+        subtitle = `${nbGarages} garage${nbGarages > 1 ? "s" : ""}`;
+    }
+
+
+
+    const handleSearch = (text) => {
+        console.log("Recherche lancée pour :", text);
+        // Ici, vous pouvez déclencher la logique de recherche
+    };
+
+
+
     return (
         <View style={{ flex: 1 }}>
-            <View style={styles.header_container}>
-                {/* Top Header */}
-                <EventsHeader
-                    pageName="Garages"
-                    onSearchPress={() => console.log("Recherche")}
-                    onFilterPress={() => console.log("Filtre")}
-                />
+            <SearchBarWithFilter
+                onSearch={handleSearch}
+            />
 
 
-            </View>
+            <SegmentedButtons selected={selected} onChange={setSelected} />
 
-            <SegmentedButtons/>
             <View style={styles.secondHeader}>
-                
-                <Text style={styles.garageDuMoisText}>Garage Janvier 2024</Text>
+                <Text style={styles.garageDuMoisText}>{title}</Text>
                 <View style={styles.date}>
-                    <MaterialCommunityIcons name="clock" size={16} color="#F7EA1A" />
-                    <Text style={styles.dateText}> Janvier 2024</Text>
+                    <MaterialCommunityIcons name="clock" size={18} color={color} />
+                    <Text style={styles.dateText}>{subtitle}</Text>
                 </View>
             </View>
-        
-            <GaragesPage user_id={null} is_garages_page_menu={true} />
+
+            {/* Ici tu adaptes le contenu */}
+            {selected === "Du Mois" && (
+                <GaragesPage user_id={null} show_my_garage={true} garage_type={"monthly"} is_finished={false} />
+            )}
+            {selected === "Mensuels" && (
+                <GaragesPage user_id={null} show_my_garage={false} garage_type={"monthly"} is_finished={true} />
+            )}
+            {selected === "Annuels" && (
+                <GaragesPage user_id={null} show_my_garage={false} garage_type={"annual"} is_finished={true} />
+            )}
+            {selected === "Mes Garages" && (
+                <GaragesPage user_id={currentUserId} show_my_garage={false} garage_type={"monthly"} onCountChange={setNbGarages} />
+            )}
 
         </View>
     );
@@ -110,10 +206,49 @@ export default function GarageStackScreen() {
 
 const styles = StyleSheet.create({
     header_container: {
-        paddingHorizontal: 16,
-        backgroundColor: '#fff', // Or your desired background color
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        backgroundColor: '#f0f0f0',
+        marginTop: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    searchContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        marginRight: 10,
+    },
+    searchInput: {
+        flex: 1,
+        height: 40,
+        fontSize: 16,
+        color: '#333',
+    },
+    icon: {
+        marginRight: 10,
+    },
+    filterButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#007aff', // Bleu iOS
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+    },
+    filterText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        marginRight: 5,
+        fontSize: 16,
     },
     secondHeader: {
         flexDirection: 'row',
@@ -151,6 +286,7 @@ const styles = StyleSheet.create({
     dateText: {
         fontSize: 16,
         color: '#666',
+        paddingLeft: 4,
     },
 
 

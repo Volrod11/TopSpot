@@ -88,6 +88,8 @@ const fetchGarageDetails = async (garage_id: string) => {
     return null;
   }
 
+  console.log("Garage details fetched: ", data);
+
   return data as Garage_details;
 };
 
@@ -270,6 +272,7 @@ const GaragePage: React.FC<Props> = ({ route }) => {
   const [garageCarTypes, setGarageCarTypes] = useState<Garage_car_types[]>([]);
   const [completion, setCompletion] = useState<Completion[]>([]);
   const [isGarageLiked, setIsGarageLiked] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
 
   const garage_id = route.params.garage_id;
 
@@ -288,23 +291,27 @@ const GaragePage: React.FC<Props> = ({ route }) => {
       setGarageCarTypes(loadedGarageCarTypes);
       setCompletion(completionData);
       setIsGarageLiked(loadIsLikedgarage);
+      setLoading(false);
     };
 
     fetchDatas();
 
   }, [garage_id]);
 
+  if (loading) {
+    return <Text>Chargement...</Text>;
+  }
 
   return (
     <ScrollView style={styles.container}>
-      <HeaderCard headerInfos={{
-        username: garageDetails?.username || '',
-        avatar_url: garageDetails?.avatar_url || null,
-        like_count: garageDetails?.total_likes || 0,
-        garage_id: garage_id,
-        completions: completion
-      }} carTypes={garageCarTypes}
-        isLikedGarage={isGarageLiked} />
+        <HeaderCard headerInfos={{
+          username: garageDetails?.username || '',
+          avatar_url: garageDetails?.avatar_url || null,
+          like_count: garageDetails?.total_likes || 0,
+          garage_id: garage_id,
+          completions: completion
+        }} carTypes={garageCarTypes}
+          isLikedGarage={isGarageLiked} />
 
       {/* Affichage des photos par catégorie */}
       {garageDetails !== null ? (

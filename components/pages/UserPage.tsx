@@ -13,17 +13,6 @@ export default function UserPage({ route }) {
   const { user_id } = route.params || {};
 
   const [index, setIndex] = React.useState(0);
-  const [routes] = React.useState([
-    { key: "pictures", title: "Photos" },
-    { key: "garages", title: "Garages" },
-    { key: "cars", title: "Voitures" },
-  ]);
-
-  const renderScene = SceneMap({
-    pictures: PicturesPage,
-    garages: GaragesPage,
-    cars: CarsPage,
-  });
 
   return (
     <View style={styles.container}>

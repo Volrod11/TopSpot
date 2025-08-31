@@ -1,57 +1,69 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // You'll need to install @expo/vector-icons if you don't have it
+import { HomeScreenStackParamList } from '../../../types';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+
+type HomePagePictureNavigationProp = StackNavigationProp<HomeScreenStackParamList, 'PicturesPage'>;
+
+
 
 const Picture = ({ picture_url }) => {
+
+  const navigation = useNavigation<HomePagePictureNavigationProp>();
+
   return (
     <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={{ uri: 'https://i.pravatar.cc/100?img=6' }} // Replace with actual avatar URI
-          style={styles.avatar}
-        />
-        <View style={styles.userInfo}>
-          <Text style={styles.username}>PorscheHunter</Text>
-          <Text style={styles.location}>Monaco</Text>
-        </View>
-        <TouchableOpacity style={styles.moreIcon}>
-          <MaterialCommunityIcons name="dots-horizontal" size={24} color="#888" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Post Image */}
-      <Image
-        source={typeof picture_url === 'string' ? { uri: picture_url } : picture_url} // Replace with the actual image URI from the post
-        style={styles.postImage}
-      />
-
-      {/* Actions */}
-      <View style={styles.actions}>
-        <View style={styles.leftActions}>
-          <View style={styles.actionItem}>
-            <MaterialCommunityIcons name="heart" size={24} color="#FF6347" />
-            <Text style={styles.actionText}>3.4k</Text>
+      <Pressable onPress={() => navigation.navigate('PicturesPage', { user_id: null, brand_filter: 'Chevrolet' })}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Image
+            source={{ uri: 'https://i.pravatar.cc/100?img=6' }} // Replace with actual avatar URI
+            style={styles.avatar}
+          />
+          <View style={styles.userInfo}>
+            <Text style={styles.username}>PorscheHunter</Text>
+            <Text style={styles.location}>Monaco</Text>
           </View>
-          <View style={styles.actionItem}>
-            <MaterialCommunityIcons name="comment" size={24} color="#888" />
-            <Text style={styles.actionText}>142</Text>
-          </View>
-          <TouchableOpacity>
-            <MaterialCommunityIcons name="bookmark" size={24} color="#888" />
+          <TouchableOpacity style={styles.moreIcon}>
+            <MaterialCommunityIcons name="dots-horizontal" size={24} color="#888" />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity>
-          <MaterialCommunityIcons name="share-variant" size={24} color="#888" />
-        </TouchableOpacity>
-      </View>
 
-      {/* Hashtags */}
-      <Text style={styles.hashtags}>
-        <Text style={styles.hashtag}>Porsche 911 GT3 RS </Text>
-        <Text style={styles.hashtag}>🤩 #Supercar #Monaco</Text>
-        <Text style={styles.hashtag}> #Porsche</Text>
-      </Text>
+        {/* Post Image */}
+        <Image
+          source={typeof picture_url === 'string' ? { uri: picture_url } : picture_url} // Replace with the actual image URI from the post
+          style={styles.postImage}
+        />
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <View style={styles.leftActions}>
+            <View style={styles.actionItem}>
+              <MaterialCommunityIcons name="heart" size={24} color="#FF6347" />
+              <Text style={styles.actionText}>3.4k</Text>
+            </View>
+            <View style={styles.actionItem}>
+              <MaterialCommunityIcons name="comment" size={24} color="#888" />
+              <Text style={styles.actionText}>142</Text>
+            </View>
+            <TouchableOpacity>
+              <MaterialCommunityIcons name="bookmark" size={24} color="#888" />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity>
+            <MaterialCommunityIcons name="share-variant" size={24} color="#888" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Hashtags */}
+        <Text style={styles.hashtags}>
+          <Text style={styles.hashtag}>Porsche 911 GT3 RS </Text>
+          <Text style={styles.hashtag}>🤩 #Supercar #Monaco</Text>
+          <Text style={styles.hashtag}> #Porsche</Text>
+        </Text>
+      </Pressable>
     </View>
   );
 };

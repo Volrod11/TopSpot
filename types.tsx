@@ -1,9 +1,9 @@
 // types.ts
 export type RootStackParamList = {
-    PicturesPage: { user_id: string };
+    PicturesPage: { user_id: string, brand_filter?: string  };
     ProfileScreen: { };
     PicturePage: { idPicture: string, picture: string };
-    GaragesPage: { garage_id: string, is_garages_page_menu : boolean };
+    GaragesPage: { garage_id: string, show_my_garage : boolean, garage_type: string, is_finished?: boolean|null, onCountChange?: (count: number) => void};
     GaragePage: { garage_id: string };
     TabScreen: { user_id: string };
 };
@@ -15,6 +15,7 @@ export type RootStackParamList2 = {
 
 export type ProfileScreenStackParamList = {
     ProfileScreen: { };
+    PicturesPage: { user_id: string|null, brand_filter?: string|null };
     PicturePage: { idPicture: string, picture: string };
     GaragePage: { garage_id: string };
     Settings: undefined;
@@ -23,4 +24,10 @@ export type ProfileScreenStackParamList = {
 export type CameraScreenStackParamList = {
     PhotoDetailsScreen: { picture: string };
     CameraScreen: {};
+};
+
+export type HomeScreenStackParamList = {
+    HomeScreen: {};
+    PicturesPage: { user_id: string|null, brand_filter?: string|null };
+    PicturePage: { idPicture: string, picture: string };
 };

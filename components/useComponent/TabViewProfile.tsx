@@ -1,30 +1,14 @@
 import * as React from 'react';
 import { View, StyleSheet, Dimensions, StatusBar } from 'react-native';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import { TabView, TabBar } from 'react-native-tab-view';
 import PicturesPage from '../pages/PicturesPage';
-import PicturePage from '../pages/PicturePage';
 import GaragesPage from '../pages/GaragesPage';
 import { useUser } from '../../context/UserContext';
-
-
-
-type TabViewProfileProps = {
-  user_id: string;
-};
 
 type State = {
   index: number;
   routes: { key: string; title: string }[];
 };
-
-const PicturesRoute = (userId: string) => () => (
-  <PicturesPage user_id={userId} />
-);
-const GaragesRoute = (userId: string) => () => (
-  <GaragesPage user_id={userId} is_garages_page_menu={false} />
-);
 
 const TabViewProfile: React.FC = () => {
   const { currentUserId } = useUser();
@@ -34,38 +18,50 @@ const TabViewProfile: React.FC = () => {
     { key: 'garages', title: 'Garages' },
   ]);
 
+  const renderScene = ({ route }: { route: { key: string } }) => {
+    switch (route.key) {
+      case 'pictures':
+        return <PicturesPage user_id={currentUserId ?? null} brand_filter={null} />;
+      case 'garages':
+        return (
+          <GaragesPage
+            user_id={currentUserId ?? ''}
+            show_my_garage={false}
+            garage_type="monthly"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <TabView
       navigationState={{ index, routes }}
-      renderScene={SceneMap({
-        pictures: PicturesRoute(currentUserId),
-        garages: GaragesRoute(currentUserId),
-      })}
+      renderScene={renderScene}
       onIndexChange={setIndex}
       initialLayout={{ width: Dimensions.get('window').width }}
       style={styles.container}
-      renderTabBar={props =>
-        <TabBar {...props}
+      renderTabBar={props => (
+        <TabBar
+          {...props}
           style={styles.tab_bar}
           indicatorStyle={styles.tab_bar_selected}
-          labelStyle={{ color: 'black' }} />}
+          labelStyle={{ color: 'black' }}
+        />
+      )}
     />
   );
 };
 
-
 export default TabViewProfile;
-
 
 const styles = StyleSheet.create({
   container: {
     marginTop: StatusBar.currentHeight,
   },
-  scene: {
-    flex: 1,
-  },
   tab_bar: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     marginBottom: 1,
   },
   tab_bar_selected: {

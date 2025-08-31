@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
-const options = ["Mensuel", "Annuel", "Mes Garages"];
+const options = ["Du Mois", "Mensuels", "Annuels"];
 
-export default function SegmentedButtons() {
-  const [selected, setSelected] = useState("Mensuel");
+export default function SegmentedButtons({ selected, onChange }) {
 
   return (
     <View style={styles.container}>
@@ -15,7 +14,7 @@ export default function SegmentedButtons() {
             styles.button,
             selected === option && styles.activeButton
           ]}
-          onPress={() => setSelected(option)}
+          onPress={() => onChange(option)}
         >
           <Text
             style={[
