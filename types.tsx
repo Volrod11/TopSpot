@@ -28,6 +28,6 @@ export type CameraScreenStackParamList = {
 
 export type HomeScreenStackParamList = {
     HomeScreen: {};
-    PicturesPage: { user_id: string|null, brand_filter?: string|null };
+    PicturesPage: { user_id: string|null, brand_filter?: string|null, period?: string|null, sort_by?: string|null, query?: string|null };
     PicturePage: { idPicture: string, picture: string };
 };

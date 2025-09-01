@@ -4,6 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 import PicturesPage from '../pages/PicturesPage';
 import PicturePage from '../pages/PicturePage';
@@ -23,6 +25,7 @@ import LastsSpots from '../HomeComponent/components/LastsSpots';
 import Picture from '../HomeComponent/components/Picture';
 import SuggestedProfiles from '../HomeComponent/components/SuggestedProfiles';
 import { supabase } from '../../lib/supabase';
+import { HomeScreenStackParamList } from '../../types';
 
 /*
 
@@ -36,6 +39,11 @@ import { supabase } from '../../lib/supabase';
 const PlaceholderImage = require('../../assets/topspottitle.png');
 
 
+type HomeScreenNavigationProp = StackNavigationProp<
+  HomeScreenStackParamList,
+  'HomeScreen'
+>;
+
 type HomepageContent = {
     id: string;
     type: 'garage' | 'picture' | 'event';
@@ -46,8 +54,8 @@ type HomepageContent = {
 
 
 const fetchHomepageContents = async () => {
-    const {data, error } = await supabase
-    .rpc('get_random_sections', { per_type: 3 });
+    const { data, error } = await supabase
+        .rpc('get_random_sections', { per_type: 3 });
     if (error) {
         console.error('Error fetching homepage contents:', error);
         return [];
@@ -58,6 +66,23 @@ const fetchHomepageContents = async () => {
 
 
 function HomeScreen() {
+    const navigation = useNavigation<HomeScreenNavigationProp>();
+
+    const [search, setSearch] = React.useState('');
+
+    const handleSearch = () => {
+        console.log("Searching for:", search);
+        
+        if (search.trim().length === 0) return; // évite recherche vide
+        navigation.navigate('PicturesPage', {
+            user_id: null,
+            brand_filter: null,
+            period: null,
+            sort_by: null,
+            query: search
+        });
+    }
+
     return (
         <View style={styles.homePage}>
             <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
@@ -84,12 +109,17 @@ function HomeScreen() {
                             placeholder="Rechercher..."
                             placeholderTextColor="#00000080"
                             style={styles.searchInput}
+                            value={search}
+                            onChangeText={setSearch}
+                            returnKeyType="search"         // ✅ affiche "Rechercher" sur le clavier
+                            onSubmitEditing={handleSearch} // ✅ déclenche la recherche
+                            blurOnSubmit={true}
                         />
                     </View>
                 </LinearGradient>
 
 
-                <CardSection title="Garage du Mois" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
+                <CardSection title="Garage du Mois" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
                     <MonthlyGarage />
                 </CardSection>
 
@@ -97,34 +127,34 @@ function HomeScreen() {
                     <LastsSpots />
                 </CardSection>
 
-                <CardSection title="Événement Proche" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
+                <CardSection title="Événement Proche" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
                     <NearbyEvent />
                 </CardSection>
 
-                
 
-                <CardSection title="Garage" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
+
+                <CardSection title="Garage" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
                     <Garage />
                 </CardSection>
-                <CardSection title="Garage" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
+                <CardSection title="Garage" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
                     <Garage />
                 </CardSection>
-                <CardSection title="Garage" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
+                <CardSection title="Garage" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
                     <Garage />
                 </CardSection>
 
-                
-                <CardSection title="Photos" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
-                    <Picture picture_url={require('../../assets/images/cullinan.jpeg')}/>
+
+                <CardSection title="Photos" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
+                    <Picture picture_url={require('../../assets/images/cullinan.jpeg')} />
                 </CardSection>
-                <CardSection title="Photos" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
-                    <Picture picture_url={require('../../assets/images/rs6gt.jpeg')}/>
+                <CardSection title="Photos" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
+                    <Picture picture_url={require('../../assets/images/rs6gt.jpeg')} />
                 </CardSection>
-                <CardSection title="Photos"  style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
-                    <Picture picture_url={require('../../assets/images/ford_gt.jpeg')}/>
+                <CardSection title="Photos" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
+                    <Picture picture_url={require('../../assets/images/ford_gt.jpeg')} />
                 </CardSection>
 
-                <CardSection title="Photos" style={{shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6,}} titleStyle={undefined}>
+                <CardSection title="Photos" style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, }} titleStyle={undefined}>
                     <SuggestedProfiles />
                 </CardSection>
 

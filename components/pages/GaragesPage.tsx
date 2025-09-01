@@ -79,7 +79,7 @@ const fetchGaragesFromDatabase = async (user_id: string | null, is_empty_garage:
     }
 
     console.log("Garages fetched: ", Garage_with_pictures);
-    
+
     return (Garage_with_pictures ?? []);
 
 };
@@ -89,6 +89,7 @@ const fetchGaragesFromDatabase = async (user_id: string | null, is_empty_garage:
 const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, show_my_garage, garage_type, is_finished, onCountChange }) => {
     const [garages, setGarages] = useState<Garage_with_pictures[]>([])
     const [myGarage, setMyGarage] = useState<Garage_with_pictures[]>([])
+    const [loading, setLoading] = useState(true);
 
     const { currentUserId } = useUser();
 
@@ -100,8 +101,8 @@ const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, show_my_garage, gara
             const fetchedMyGarage = show_my_garage ? await fetchGaragesFromDatabase(currentUserId, show_my_garage, garage_type, false) : [];
             const fetchedGarages = await fetchGaragesFromDatabase(user_id, false, garage_type, is_finished);
 
-            console.log(fetchedGarages);
-            
+            console.log(fetchedMyGarage);
+
 
             setGarages(fetchedGarages);
             setMyGarage(fetchedMyGarage);
@@ -111,36 +112,38 @@ const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, show_my_garage, gara
             if (onCountChange) {
                 onCountChange(fetchedGarages.length);
             }
+
+            setLoading(false);
         };
 
         fetchData();
     }, []);
 
 
+    if (loading) {
+        return <Text>Chargement...</Text>;
+    }
+
     return (
         <View style={styles.main_style}>
-            {garages.length > 0 ? (
-                <View style={{ flex: 1 }}>
-                    <FlatList
-                        style={{ flex: 1 }}
-                        data={garages}
-                        keyExtractor={item => item.garage_id}
-                        numColumns={2}
-                        columnWrapperStyle={styles.row}
-                        contentContainerStyle={{ padding: 12, flexGrow: 1 }}
-                        ListHeaderComponent={
-                            show_my_garage ? (
-                                <View style={styles.myGarageCard}>
-                                    <MyGarageCard garage_with_pictures={myGarage[0]} />
-                                </View>
-                            ) : null
-                        }
-                        renderItem={({ item }) => (<MiniGarageCard garage_with_pictures={item} />)}
-                    />
-                </View>
-            ) : (
-                <Text style={styles.chargement}>Pas de Garage</Text>
-            )}
+            <View style={{ flex: 1 }}>
+                <FlatList
+                    style={{ flex: 1 }}
+                    data={garages}
+                    keyExtractor={item => item.garage_id}
+                    numColumns={2}
+                    columnWrapperStyle={styles.row}
+                    contentContainerStyle={{ padding: 12, flexGrow: 1 }}
+                    ListHeaderComponent={
+                        show_my_garage ? (
+                            <View style={styles.myGarageCard}>
+                                <MyGarageCard garage_with_pictures={myGarage[0]} />
+                            </View>
+                        ) : null
+                    }
+                    renderItem={({ item }) => (<MiniGarageCard garage_with_pictures={item} />)}
+                />
+            </View>
         </View>
 
     );

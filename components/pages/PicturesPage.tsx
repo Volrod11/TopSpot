@@ -10,6 +10,9 @@ import { HomeScreenStackParamList } from '../../types';
 type PicturesPageProps = {
   user_id: string | null;
   brand_filter?: string | null;
+  period?: string | null;
+  sort_by?: string | null;
+  query?: string | null;
 };
 
 type PicturesPageNavigationProp = StackNavigationProp<HomeScreenStackParamList, 'PicturesPage'>;
@@ -19,11 +22,24 @@ type Picture = {
   picture_url: string;
 };
 
+/*
+Fetch pictures from Supabase
+user_id uuid default null,
+brand_filter text default null,
+period text default null,        -- 'week', 'month', ou null
+sort_by text default null,       -- 'likes', 'comments', ou null
+query text default null,
+*/
+const fetchPictures = async (user_id?: string | null, brand_filter?: string | null, period?: string | null, sort_by?: string | null, query?: string | null) => {
+  console.log("query : ", query);
 
-const fetchPictures = async (user_id: string | null, p_brand_filter?: string) => {
-  console.log("Fetching pictures for user_id:", user_id, "with brand filter:", p_brand_filter);
-
-  const { data, error } = await supabase.rpc("get_filtered_pictures", { p_user_id: user_id, p_brand_filter });
+  const { data, error } = await supabase.rpc("search_filtered_pictures", {
+    p_user_id: user_id,
+    p_brand_filter: brand_filter,
+    p_period: period,
+    p_sort_by: sort_by,
+    p_query: query
+  });
   if (error) {
     console.error("Error fetching pictures: ", error);
     return [];
@@ -33,7 +49,17 @@ const fetchPictures = async (user_id: string | null, p_brand_filter?: string) =>
 };
 
 
-const PicturesPage: React.FC<PicturesPageProps> = ({ user_id = null, brand_filter }) => {
+const PicturesPage = () => {
+  const route = useRoute<RouteProp<HomeScreenStackParamList, 'PicturesPage'>>();
+  const {
+    user_id = null,
+    brand_filter,
+    period,
+    sort_by,
+    query
+  } = route.params ?? {};
+
+
   const navigation = useNavigation<PicturesPageNavigationProp>();
 
 
@@ -46,15 +72,20 @@ const PicturesPage: React.FC<PicturesPageProps> = ({ user_id = null, brand_filte
   };
 
   useEffect(() => {
-    console.log("user_id:", user_id, "brand_filter:", brand_filter);
-    
+    console.log("query : ", query);
+
     async function getPictures() {
-      const fetchedPictures = await fetchPictures(user_id, brand_filter);
+      const fetchedPictures = await fetchPictures(
+        user_id,
+        brand_filter,
+        period,
+        sort_by,
+        query);
       setPictures(fetchedPictures);
     }
 
     getPictures();
-  }, [user_id, brand_filter]);
+  }, []);
 
 
 
