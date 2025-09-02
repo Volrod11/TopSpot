@@ -28,6 +28,7 @@ export type CameraScreenStackParamList = {
 
 export type HomeScreenStackParamList = {
     HomeScreen: {};
+    GaragesPage: { user_id: string, show_my_garage : boolean, garage_type: string, is_finished?: boolean|null, query?: string|null, onCountChange?: (count: number) => void};
     PicturesPage: { user_id: string|null, brand_filter?: string|null, period?: string|null, sort_by?: string|null, query?: string|null };
     PicturePage: { idPicture: string, picture: string };
 };

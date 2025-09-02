@@ -46,6 +46,7 @@ type GaragesPageProps = {
     show_my_garage: boolean;
     garage_type: string;
     is_finished?: boolean;
+    query?: string | null;
     onCountChange?: (count: number) => void;
 };
 
@@ -68,12 +69,12 @@ type Garage_with_pictures = {
 
 
 //Const Function
-const fetchGaragesFromDatabase = async (user_id: string | null, is_empty_garage: boolean, duration_type: string, is_finished: boolean) => {
+const fetchGaragesFromDatabase = async (user_id: string | null, is_empty_garage: boolean, duration_type: string, is_finished: boolean, query: string|null) => {
     console.log("Fetching garages for user_id:", user_id, "is_garages_page_menu:", is_empty_garage, "duration_type:", duration_type, "is_garage_finished:", is_finished);
 
 
     const { data: Garage_with_pictures, error } = await supabase
-        .rpc("get_garages_and_car_types_with_details", { profile_param: user_id, empty_garage: is_empty_garage, duration_type: duration_type, is_garage_finished: is_finished });
+        .rpc("get_garages_and_car_types_with_details", { p_profile: user_id, p_empty_garage: is_empty_garage, p_duration_type: duration_type, p_is_garage_finished: is_finished, p_query: query });
     if (error) {
         console.error("Error fetching garages : ", error);
     }
@@ -86,7 +87,7 @@ const fetchGaragesFromDatabase = async (user_id: string | null, is_empty_garage:
 
 
 
-const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, show_my_garage, garage_type, is_finished, onCountChange }) => {
+const GaragesPage: React.FC<GaragesPageProps> = ({ user_id = null, show_my_garage = null, garage_type = null, is_finished = null, query = null, onCountChange }: GaragesPageProps) => {
     const [garages, setGarages] = useState<Garage_with_pictures[]>([])
     const [myGarage, setMyGarage] = useState<Garage_with_pictures[]>([])
     const [loading, setLoading] = useState(true);
@@ -98,8 +99,8 @@ const GaragesPage: React.FC<GaragesPageProps> = ({ user_id, show_my_garage, gara
 
     useEffect(() => {
         const fetchData = async () => {
-            const fetchedMyGarage = show_my_garage ? await fetchGaragesFromDatabase(currentUserId, show_my_garage, garage_type, false) : [];
-            const fetchedGarages = await fetchGaragesFromDatabase(user_id, false, garage_type, is_finished);
+            const fetchedMyGarage = show_my_garage ? await fetchGaragesFromDatabase(currentUserId, show_my_garage, garage_type, false, null) : [];
+            const fetchedGarages = await fetchGaragesFromDatabase(user_id, false, garage_type, is_finished, query);
 
             console.log(fetchedMyGarage);
 
