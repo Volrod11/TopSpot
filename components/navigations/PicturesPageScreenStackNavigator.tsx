@@ -2,8 +2,9 @@ import * as React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import PicturesPage from '../pages/PicturesPage'; // Assurez-vous que le chemin est correct
 import PicturePage from '../pages/PicturePage'; // Assurez-vous que le chemin est correct
+import { PicturesStackParamList } from '../../types';
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<PicturesStackParamList>();
 
 const PicturesPageScreenStackNavigator = () => {
   return (

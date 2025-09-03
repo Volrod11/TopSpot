@@ -16,10 +16,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
-import PicturesPage from "../pages/PicturesPage";
-import PicturePage from "../pages/PicturePage";
-import TestPage from "../pages/PicturePage";
-
 import MonthlyGarage from "../HomeComponent/components/MonthlyGarage";
 import WeeklyPic from "../HomeComponent/components/WeeklyPic";
 import SharedGarage from "../HomeComponent/components/SharedGarage";
@@ -65,25 +61,12 @@ const fetchHomepageContents = async () => {
   return data as HomepageContent[];
 };
 
-function HomeScreen() {
+export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   const [search, setSearch] = React.useState("");
   const [searchVisible, setSearchVisible] = React.useState(false);
-
-  const handleSearch = () => {
-    console.log("Searching for:", search);
-
-    if (search.trim().length === 0) return; // évite recherche vide
-    navigation.navigate("PicturesPage", {
-      user_id: null,
-      brand_filter: null,
-      period: null,
-      sort_by: null,
-      query: search,
-    });
-  };
 
   const openSearch = () => {
     setSearchVisible(true);
@@ -137,25 +120,6 @@ function HomeScreen() {
               </Pressable>
             </View>
           </View>
-
-          <Pressable style={styles.searchContainer} onPress={openSearch}>
-            <Ionicons
-              name="search-outline"
-              size={20}
-              color="#00000080"
-              style={styles.searchIcon}
-            />
-            <TextInput
-              placeholder="Rechercher..."
-              placeholderTextColor="#00000080"
-              style={styles.searchInput}
-              value={search}
-              onChangeText={setSearch}
-              returnKeyType="search" // ✅ affiche "Rechercher" sur le clavier
-              onSubmitEditing={handleSearch} // ✅ déclenche la recherche
-              blurOnSubmit={true}
-            />
-          </Pressable>
         </LinearGradient>
 
         <CardSection
@@ -284,47 +248,17 @@ function HomeScreen() {
         <SharedGarage />
         <FourPictures />
         <SharedPicture />
-
-        {/* Overlay SearchScreen */}
-        {searchVisible && (
-          <Animated.View
-            style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
-          >
-            <SearchPage onClose={closeSearch} />
-          </Animated.View>
-        )}
       </ScrollView>
+
+      {/* Overlay SearchScreen */}
+      {searchVisible && (
+        <Animated.View
+          style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
+        >
+          <SearchPage onClose={closeSearch} />
+        </Animated.View>
+      )}
     </View>
-  );
-}
-
-const HomeStack = createNativeStackNavigator();
-
-export default function HomeStackScreen() {
-  return (
-    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-      <HomeStack.Screen name="HomeScreen" component={HomeScreen} />
-      <HomeStack.Screen
-        name="SearchScreen"
-        component={SearchPage}
-        options={{
-          presentation: "transparentModal", // transition fluide
-          animation: "slide_from_bottom", // effet qui monte
-          headerShown: false, // pas de header
-        }}
-      />
-      <HomeStack.Screen
-        name="PicturesPage"
-        component={PicturesPage}
-        initialParams={{ user_id: null }}
-        options={{ headerShown: true }}
-      />
-      <HomeStack.Screen
-        name="PicturePage"
-        component={PicturePage}
-        options={{ headerShown: true }}
-      />
-    </HomeStack.Navigator>
   );
 }
 
@@ -350,9 +284,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   gradient: {
-    paddingTop: 50,
+    paddingTop: 60,
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 10,
     width: "100%",
     marginBottom: 20,
   },
@@ -363,10 +297,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "700",
     color: "white",
+    letterSpacing: 1,
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
+
   iconsContainer: {
     flexDirection: "row",
     position: "relative",
@@ -376,23 +315,28 @@ const styles = StyleSheet.create({
     position: "relative",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.15)",
+    padding: 6,
+    borderRadius: 20,
   },
   badge: {
     position: "absolute",
-    top: -6,
-    right: -6,
+    top: -4,
+    right: -4,
     backgroundColor: "red",
-    borderRadius: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#fff",
     paddingHorizontal: 5,
-    paddingVertical: 1,
-    minWidth: 16,
+    minWidth: 18,
+    height: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeText: {
-    color: "white",
+    color: "#fff",
     fontSize: 10,
-    fontWeight: "bold",
+    fontWeight: "700",
   },
   searchContainer: {
     flexDirection: "row",

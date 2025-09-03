@@ -1,11 +1,7 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, ImageBackground, Pressable  } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 
-import TestPage from '../../pages/PicturePage';
 
 const PlaceholderImage = require('../../../assets/images/r8.png');
 

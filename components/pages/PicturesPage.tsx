@@ -8,11 +8,12 @@ import {
   FlatList,
   ListRenderItem,
 } from "react-native";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import {  useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { supabase } from "../../lib/supabase";
-import { HomeScreenStackParamList } from "../../types";
+import {  HomeScreenStackParamList, PicturesStackParamList } from "../../types";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type PicturesPageProps = {
   user_id: string | null;
@@ -22,8 +23,8 @@ type PicturesPageProps = {
   query?: string | null;
 };
 
-type PicturesPageNavigationProp = StackNavigationProp<
-  HomeScreenStackParamList,
+type NavigationProp = StackNavigationProp<
+  PicturesStackParamList,
   "PicturesPage"
 >;
 
@@ -64,14 +65,19 @@ const fetchPictures = async (
   return data as Picture[];
 };
 
-const PicturesPage = ({ user_id = null, brand_filter = null, period = null, sort_by = null, query = null,}: PicturesPageProps) => {
-  const route = useRoute<RouteProp<HomeScreenStackParamList, "PicturesPage">>();
+const PicturesPage = ({
+  user_id = null,
+  brand_filter = null,
+  period = null,
+  sort_by = null,
+  query = null,
+}: PicturesPageProps) => {
 
-  const navigation = useNavigation<PicturesPageNavigationProp>();
+  const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
   const [pictures, setPictures] = useState<Picture[]>([]);
 
-  const goToPicturePages = (idPicture: string, picture: string) => {
+  const goToPicturePage = (idPicture: string, picture: string) => {
     navigation.navigate("PicturePage", {
       idPicture: idPicture,
       picture: picture,
@@ -98,7 +104,7 @@ const PicturesPage = ({ user_id = null, brand_filter = null, period = null, sort
   const renderItem: ListRenderItem<Picture> = ({ item }) => (
     <Pressable
       key={item.picture_id}
-      onPress={() => goToPicturePages(item.picture_id, item.picture_url)}
+      onPress={() => goToPicturePage(item.picture_id, item.picture_url)}
       style={styles.bouton}
     >
       <Image source={{ uri: item.picture_url }} style={styles.image} />

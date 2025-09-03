@@ -1,17 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList } from '../../../types';
+import { HomeScreenStackParamList } from '../../../types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-
-type PicturesPageNavigationProp = StackNavigationProp<RootStackParamList, 'GaragePage'>;
 
 
 const MiniGarageCard = ({ garage_with_pictures }) => {
 
-  const navigation = useNavigation<PicturesPageNavigationProp>();
+  const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
   return (
     <View style={styles.card}>

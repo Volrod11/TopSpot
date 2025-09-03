@@ -1,12 +1,8 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, ImageBackground, Pressable, Image } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import TestPage from '../../pages/PicturePage';
 
 
 export default function MonthlyGarage() {

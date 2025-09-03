@@ -1,25 +1,26 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, StyleSheet, Image, TouchableHighlight, TextInput, TouchableOpacity, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Animated, PanResponder, FlatList, Keyboard, Dimensions, ListRenderItem } from 'react-native';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../types';
+import { RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../lib/supabase';
 import { useState, useEffect, useRef } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { PicturesStackParamList } from '../../types';
 
 const defaultPdp = require('../../assets/default_pfp.png');
 
 
 //Type
-type PicturePageRouteProp = RouteProp<RootStackParamList, 'PicturePage'>;
-type PicturePageNavigationProp = StackNavigationProp<RootStackParamList, 'PicturePage'>;
-
+type PicturesPageNavigationProp = StackNavigationProp<
+  PicturesStackParamList,
+  "PicturePage"
+>;
 
 type Props = {
-  navigation: PicturePageNavigationProp;
-  route: PicturePageRouteProp;
+  idPicture: string;
+  picture: string;
 };
 
 type User = {
@@ -139,7 +140,9 @@ const addPictureInGarageToDatabase = async (idPicture : string, idGarage : strin
   }
 };
 
-const PicturePage: React.FC<Props> = ({ route, navigation }) => {
+const PicturePage: React.FC<Props> = ({ 
+  idPicture, picture
+ } : Props) => {
   const [rowCount, setRowCount] = useState<number | null>(null);
   const [iconName, setIconName] = useState<string>();
   const [iconColor, setIconColor] = useState<string>();
@@ -158,8 +161,7 @@ const PicturePage: React.FC<Props> = ({ route, navigation }) => {
 
   const modalHeight = useRef(new Animated.Value(0)).current;
   const pan = useRef(new Animated.Value(0)).current;
-  const idPicture = route.params.idPicture;
-  const picture = route.params.picture;
+  const navigation = useNavigation<PicturesPageNavigationProp>();
 
 
   useEffect(() => {

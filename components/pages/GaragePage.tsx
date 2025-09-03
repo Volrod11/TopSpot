@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Text, View, StyleSheet, Image, ScrollView, FlatList, Dimensions, TouchableOpacity, Pressable } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../types';
+import { GaragesStackParamList } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useState, useEffect } from 'react';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator(); // Stack contains Screen & Navigator properties
 
-type GarageRouteProp = RouteProp<RootStackParamList, 'GaragePage'>;
+type GarageRouteProp = RouteProp<GaragesStackParamList, 'GaragePage'>;
 
 type Props = {
   route: GarageRouteProp;

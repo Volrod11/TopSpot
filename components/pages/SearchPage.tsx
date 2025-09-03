@@ -7,14 +7,15 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  ScrollView,
   Pressable,
-  TouchableOpacity,
   Dimensions,
   SafeAreaView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import PicturesPage from "./PicturesPage";
 import GaragesPage from "./GaragesPage";
+import SearchPropositions from "./SearchPropositions";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -38,195 +39,170 @@ export default function SearchPage({ onClose }: SearchScreenProps) {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={styles.container}>
-        {/* Champ recherche */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color="#00000080"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            ref={inputRef}
-            placeholder="Rechercher..."
-            placeholderTextColor="#00000080"
-            style={styles.searchInput}
-            value={search}
-            onChangeText={setSearch}
-            onFocus={() => setShowHistory(true)}
-            onBlur={() => setShowHistory(false)}
-            returnKeyType="search" // ✅ affiche "Rechercher" sur le clavier
-            onSubmitEditing={() => setShowHistory(false)} // ✅ déclenche la recherche
-            blurOnSubmit={true}
-          />
-        </View>
-        {/* Onglets */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-around",
-            marginBottom: 10,
-          }}
-        >
-          <Pressable onPress={() => setActiveTab("photos")}>
-            <Text
-              style={{ fontWeight: activeTab === "photos" ? "bold" : "normal" }}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <View style={styles.container}>
+          {/* Champ recherche */}
+          <View style={styles.backAndSearchContainer}>
+            <Pressable
+              onPress={onClose}
+              style={styles.backButton}
+              hitSlop={10} // élargit la zone cliquable
             >
-              Photos
-            </Text>
-          </Pressable>
-          <Pressable onPress={() => setActiveTab("garages")}>
-            <Text
-              style={{
-                fontWeight: activeTab === "garages" ? "bold" : "normal",
-              }}
-            >
-              Garages
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Contenu */}
-        <View style={{ flex: 1 }}>
-          {showHistory ? (
-            <View>
-              {/* Recherches récentes */}
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Recherches récentes</Text>
-                  <Text style={styles.clear}>Effacer</Text>
-                </View>
-                {[
-                  "Lamborghini Aventador",
-                  "Garage supercar mars",
-                  "Meeting Cars Paris",
-                ].map((item, idx) => (
-                  <Text key={idx} style={styles.listItem}>
-                    🔍 {item}
-                  </Text>
-                ))}
-              </View>
-
-              {/* Tendances */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Tendances</Text>
-                {["#SupercarSpotting", "#FerrariF8", "#ClassicCars"].map(
-                  (tag, idx) => (
-                    <Text key={idx} style={styles.listItem}>
-                      {tag}
-                    </Text>
-                  )
-                )}
-              </View>
-
-              {/* Catégories populaires */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Catégories populaires</Text>
-                <View style={styles.categories}>
-                  <Pressable
-                    style={[styles.category, { backgroundColor: "#f43f5e" }]}
-                  >
-                    <Text style={styles.catText}>Supercars</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.category, { backgroundColor: "#3b82f6" }]}
-                  >
-                    <Text style={styles.catText}>Muscle Cars</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.category, { backgroundColor: "#22c55e" }]}
-                  >
-                    <Text style={styles.catText}>Off-Road</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.category, { backgroundColor: "#a855f7" }]}
-                  >
-                    <Text style={styles.catText}>Classiques</Text>
-                  </Pressable>
-                </View>
-              </View>
-
-              {/* Utilisateurs suggérés */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Utilisateurs suggérés</Text>
-                {["Alex_Spotter", "CarLover_Emma"].map((user, idx) => (
-                  <View key={idx} style={styles.userRow}>
-                    <Text>{user}</Text>
-                    <Pressable style={styles.followBtn}>
-                      <Text style={styles.followText}>Suivre</Text>
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-
-              {/* Actions rapides */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Actions rapides</Text>
-                <View style={styles.quickActions}>
-                  <Pressable style={styles.quickBtn}>
-                    <Text>Spotter maintenant</Text>
-                  </Pressable>
-                  <Pressable style={styles.quickBtn}>
-                    <Text>Événements près de moi</Text>
-                  </Pressable>
-                </View>
-              </View>
+              <Ionicons name="arrow-back" size={22} color="#333" />
+            </Pressable>
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search-outline"
+                size={20}
+                color="#00000080"
+                style={styles.searchIcon}
+              />
+              <TextInput
+                ref={inputRef}
+                placeholder="Rechercher..."
+                placeholderTextColor="#888"
+                style={styles.searchInput}
+                value={search}
+                onChangeText={setSearch}
+                onFocus={() => setShowHistory(true)}
+                onBlur={() => setShowHistory(false)}
+                returnKeyType="search"
+                onSubmitEditing={() => setShowHistory(false)}
+                blurOnSubmit={true}
+              />
             </View>
-          ) : (
-            <>
-              {activeTab === "photos" && (
-                <PicturesPage
-                  user_id={null}
-                  brand_filter={null}
-                  period={null}
-                  sort_by={null}
-                  query={search}
-                />
-              )}
-              {activeTab === "garages" && (
-                <GaragesPage
-                  user_id={null}
-                  show_my_garage={false}
-                  garage_type={null}
-                  is_finished={null}
-                  query={search}
-                />
-              )}
-            </>
-          )}
+          </View>
+          {/* Onglets */}
+          <View style={styles.tabs}>
+            <Pressable
+              style={[
+                styles.tab,
+                activeTab === "photos" && styles.activeTab, // applique style actif
+              ]}
+              onPress={() => setActiveTab("photos")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "photos" && styles.activeTabText,
+                ]}
+              >
+                Photos
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.tab,
+                activeTab === "garages" && styles.activeTab, // applique style actif
+              ]}
+              onPress={() => setActiveTab("garages")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "garages" && styles.activeTabText,
+                ]}
+              >
+                Garages
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Contenu */}
+          <View style={{ flex: 1 }}>
+            {showHistory ? (
+              <SearchPropositions />
+            ) : (
+              <>
+                {activeTab === "photos" && (
+                  <PicturesPage
+                    user_id={null}
+                    brand_filter={null}
+                    period={null}
+                    sort_by={null}
+                    query={search}
+                  />
+                )}
+                {activeTab === "garages" && (
+                  <GaragesPage
+                    user_id={null}
+                    show_my_garage={false}
+                    garage_type={null}
+                    is_finished={true}
+                    query={search}
+                  />
+                )}
+              </>
+            )}
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 16,
+    paddingHorizontal: 0,
+  },
+  backAndSearchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff41",
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    height: 40,
-    borderColor: "#ffffff60",
-    borderWidth: 0.7,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 30,
+    paddingHorizontal: 12,
+    height: 44,
+    flex: 1, // prend toute la largeur dispo
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  backButton: {
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
+    fontSize: 15,
     color: "#000",
   },
   searchIcon: {
     marginRight: 6,
   },
-  tabs: { flexDirection: "row", marginBottom: 16 },
+  tabs: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 16,
+    gap: 12, // espace entre boutons (si RN > 0.71, sinon utiliser marginRight)
+  },
   tab: {
-    marginRight: 12,
-    padding: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 9999, // ovale
     backgroundColor: "#eee",
-    borderRadius: 20,
+  },
+  activeTab: {
+    backgroundColor: "#f43f5e", // couleur active
+  },
+  tabText: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "600",
+  },
+  activeTabText: {
+    color: "#fff",
   },
   section: { marginBottom: 20 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between" },

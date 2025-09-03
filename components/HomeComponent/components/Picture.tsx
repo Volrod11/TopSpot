@@ -5,17 +5,19 @@ import { HomeScreenStackParamList } from '../../../types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 
-type HomePagePictureNavigationProp = StackNavigationProp<HomeScreenStackParamList, 'PicturesPage'>;
-
+type NavigationProp = StackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>;
 
 
 const Picture = ({ picture_url }) => {
-
-  const navigation = useNavigation<HomePagePictureNavigationProp>();
-
+  const navigation = useNavigation<NavigationProp>();
   return (
     <View style={styles.card}>
-      <Pressable onPress={() => navigation.navigate('PicturesPage', { user_id: null, brand_filter: 'Chevrolet' })}>
+      <Pressable onPress={() =>
+          navigation.navigate("PicturesStack", {
+            screen: "PicturesPage",
+            params: { user_id: null, brand_filter: 'Chevrolet' }
+          })
+        }>
         {/* Header */}
         <View style={styles.header}>
           <Image

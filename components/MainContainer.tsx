@@ -11,13 +11,13 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // Screens
-import HomeStackScreen from './screens/HomeScreen';
 import GaragesScreen from './screens/GaragesScreen';
 import CameraScreen from './screens/CameraScreen';
 import MapScreen from './screens/MapScreen';
 import ProfileScreenStack from './screens/ProfileScreen';
 import CameraScreenNavigation from './navigations/CameraScreenNavigation';
-import ProfileScreenNavigator from './navigations/ProfileScreenNavigator';
+import ProfileStackNavigator from './navigations/ProfileStackNavigator';
+import HomeStackNavigator from './navigations/HomeStackNavigator';
 
 
 //Screen names
@@ -83,11 +83,11 @@ function MainContainer() {
                 })}
             >
 
-                <Tab.Screen name={homeName} component={HomeStackScreen} />
+                <Tab.Screen name={homeName} component={HomeStackNavigator} />
                 <Tab.Screen name={garageName} component={GaragesScreen} />
                 <Tab.Screen name={cameraName} component={CameraScreenNavigation} />
                 <Tab.Screen name={mapName} component={MapScreen} />
-                <Tab.Screen name={profileName} component={ProfileScreenNavigator} />
+                <Tab.Screen name={profileName} component={ProfileStackNavigator} />
 
 
             </Tab.Navigator>
