@@ -1,13 +1,13 @@
 import * as React from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Pressable,
-  Dimensions,
-  Animated,
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Image,
+    Pressable,
+    Dimensions,
+    Animated,
 } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -38,329 +38,351 @@ const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
 
 type HomeScreenNavigationProp = StackNavigationProp<
-  HomeScreenStackParamList,
-  "HomeScreen"
+    HomeScreenStackParamList,
+    "HomeScreen"
 >;
 
 type HomepageContent = {
-  id: string;
-  type: "garage" | "picture" | "event";
-  title: string;
-  filters: JSON;
+    id: string;
+    type: "garage" | "picture" | "event";
+    title: string;
+    filters: JSON;
 };
 
-const fetchHomepageContents = async () => {
-  const { data, error } = await supabase.rpc("get_random_sections", {
-    per_type: 3,
-  });
-  if (error) {
-    console.error("Error fetching homepage contents:", error);
-    return [];
-  }
 
-  return data as HomepageContent[];
+const fetchHomepageContents = async () => {
+    const { data, error } = await supabase.rpc("get_random_sections", {
+        per_type: 3,
+    });
+    if (error) {
+        console.error("Error fetching homepage contents:", error);
+        return [];
+    }
+
+    return data as HomepageContent[];
 };
 
 export default function HomeScreen() {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
-  const slideAnim = useRef(new Animated.Value(height)).current;
+    const navigation = useNavigation<HomeScreenNavigationProp>();
+    const slideAnim = useRef(new Animated.Value(height)).current;
 
-  const [search, setSearch] = React.useState("");
-  const [searchVisible, setSearchVisible] = React.useState(false);
+    const [search, setSearch] = React.useState("");
+    const [searchVisible, setSearchVisible] = React.useState(false);
 
-  const openSearch = () => {
-    setSearchVisible(true);
-    Animated.timing(slideAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
+    const openSearch = () => {
+        setSearchVisible(true);
+        Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
+    };
 
-  const closeSearch = () => {
-    Animated.timing(slideAnim, {
-      toValue: height,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setSearchVisible(false);
-    });
-  };
+    const closeSearch = () => {
+        Animated.timing(slideAnim, {
+            toValue: height,
+            duration: 300,
+            useNativeDriver: true,
+        }).start(() => {
+            setSearchVisible(false);
+        });
+    };
 
-  return (
-    <View style={styles.homePage}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollView}
-      >
-        <LinearGradient
-          colors={["#667DE9", "#764DA4"]}
-          start={{ x: 1, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.gradient}
-        >
-          <View style={styles.topRow}>
-            <Text style={styles.title}>TopSpot</Text>
-            <View style={styles.iconsContainer}>
-              <View style={styles.iconWrapper}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={24}
-                  color="white"
-                />
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>3</Text>
-                </View>
-              </View>
-              <View style={{ width: 16 }} />
-              {/* Espace entre les deux icônes */}
-              <Pressable onPress={openSearch}>
-                <Ionicons name="search-outline" size={24} color="white" />
-              </Pressable>
-            </View>
-          </View>
-        </LinearGradient>
+    return (
+        <View style={styles.homePage}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollView}
+            >
+                <LinearGradient
+                    colors={["#667DE9", "#764DA4"]}
+                    start={{ x: 1, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.gradient}
+                >
+                    <View style={styles.topRow}>
+                        <Text style={styles.title}>TopSpot</Text>
+                        <View style={styles.iconsContainer}>
+                            <Pressable
+                                //onPress={openNotifications}
+                                style={styles.iconButton}
+                                hitSlop={8}
+                            >
+                                <Ionicons name="notifications-outline" size={20} color="#fff" />
+                                <View style={styles.badge}>
+                                    <Text style={styles.badgeText}>3</Text>
+                                </View>
+                            </Pressable>
+                            <Pressable
+                                //onPress={openNotifications}
+                                style={[styles.iconButton, { marginLeft: 12 }]}
+                                hitSlop={8}
+                            >
+                                <Ionicons name="chatbox-outline" size={20} color="#fff" />
+                                <View style={styles.badge}>
+                                    <Text style={styles.badgeText}>3</Text>
+                                </View>
+                            </Pressable>
 
-        <CardSection
-          title="Garage du Mois"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <MonthlyGarage />
-        </CardSection>
+                            <Pressable
+                                onPress={openSearch}
+                                style={[styles.iconButton, { marginLeft: 12 }]}
+                                hitSlop={8}
+                            >
+                                <Ionicons name="search-outline" size={20} color="#fff" />
+                            </Pressable>
+                        </View>
+                    </View>
+                </LinearGradient>
 
-        <CardSection
-          title="Spots récents"
-          style={undefined}
-          titleStyle={undefined}
-        >
-          <LastsSpots />
-        </CardSection>
+                <CardSection
+                    title="Garage du Mois"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <MonthlyGarage />
+                </CardSection>
 
-        <CardSection
-          title="Événement Proche"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <NearbyEvent />
-        </CardSection>
+                <CardSection
+                    title="Spots récents"
+                    style={undefined}
+                    titleStyle={undefined}
+                >
+                    <LastsSpots />
+                </CardSection>
 
-        <CardSection
-          title="Garage"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <Garage />
-        </CardSection>
-        <CardSection
-          title="Garage"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <Garage />
-        </CardSection>
-        <CardSection
-          title="Garage"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <Garage />
-        </CardSection>
+                <CardSection
+                    title="Événement Proche"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <NearbyEvent />
+                </CardSection>
 
-        <CardSection
-          title="Photos"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <Picture picture_url={require("../../assets/images/cullinan.jpeg")} />
-        </CardSection>
-        <CardSection
-          title="Photos"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <Picture picture_url={require("../../assets/images/rs6gt.jpeg")} />
-        </CardSection>
-        <CardSection
-          title="Photos"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <Picture picture_url={require("../../assets/images/ford_gt.jpeg")} />
-        </CardSection>
+                <CardSection
+                    title="Garage"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <Garage />
+                </CardSection>
+                <CardSection
+                    title="Garage"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <Garage />
+                </CardSection>
+                <CardSection
+                    title="Garage"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <Garage />
+                </CardSection>
 
-        <CardSection
-          title="Photos"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.1,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 6,
-          }}
-          titleStyle={undefined}
-        >
-          <SuggestedProfiles />
-        </CardSection>
+                <CardSection
+                    title="Photos"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <Picture picture_url={require("../../assets/images/cullinan.jpeg")} />
+                </CardSection>
+                <CardSection
+                    title="Photos"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <Picture picture_url={require("../../assets/images/rs6gt.jpeg")} />
+                </CardSection>
+                <CardSection
+                    title="Photos"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <Picture picture_url={require("../../assets/images/ford_gt.jpeg")} />
+                </CardSection>
 
-        <WeeklyPic />
-        <MonthlyGarage />
-        <SharedGarage />
-        <FourPictures />
-        <SharedPicture />
-      </ScrollView>
+                <CardSection
+                    title="Photos"
+                    style={{
+                        shadowColor: "#000",
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 6,
+                    }}
+                    titleStyle={undefined}
+                >
+                    <SuggestedProfiles />
+                </CardSection>
 
-      {/* Overlay SearchScreen */}
-      {searchVisible && (
-        <Animated.View
-          style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
-        >
-          <SearchPage onClose={closeSearch} />
-        </Animated.View>
-      )}
-    </View>
-  );
+                <WeeklyPic />
+                <MonthlyGarage />
+                <SharedGarage />
+                <FourPictures />
+                <SharedPicture />
+            </ScrollView>
+
+            {/* Overlay SearchScreen */}
+            {searchVisible && (
+                <Animated.View
+                    style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
+                >
+                    <SearchPage onClose={closeSearch} />
+                </Animated.View>
+            )}
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  homePage: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  text: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
-    width: "100%",
-  },
-  scrollView: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  gradient: {
-    paddingTop: 60,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    width: "100%",
-    marginBottom: 20,
-  },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "white",
-    letterSpacing: 1,
-    textShadowColor: "rgba(0,0,0,0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
+    homePage: {
+        flex: 1,
+        backgroundColor: "#FFFFFF",
+    },
+    text: {
+        fontSize: 26,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+    },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 20,
+        width: "100%",
+    },
+    scrollView: {
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    gradient: {
+        paddingTop: 60,
+        paddingHorizontal: 16,
+        paddingBottom: 10,
+        width: "100%",
+        marginBottom: 20,
+    },
+    topRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 15,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: "700",
+        color: "white",
+        letterSpacing: 1,
+        textShadowColor: "rgba(0,0,0,0.3)",
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+    },
+    iconsContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    iconButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: "rgba(255,255,255,0.15)",
+        justifyContent: "center",
+        alignItems: "center",
+        position: "relative", // pour que le badge soit placé dessus
+    },
+    iconWrapper: {
+        position: "relative",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.15)",
+        padding: 6,
+        borderRadius: 20,
+    },
+    badge: {
+        position: "absolute",
+        top: -2,
+        right: -2,
+        backgroundColor: "#ef4444",
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: "#fff",
+        minWidth: 16,
+        height: 16,
+        paddingHorizontal: 4,
+        alignItems: "center",
+        justifyContent: "center",
+    },
 
-  iconsContainer: {
-    flexDirection: "row",
-    position: "relative",
-    padding: 5,
-  },
-  iconWrapper: {
-    position: "relative",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.15)",
-    padding: 6,
-    borderRadius: 20,
-  },
-  badge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    backgroundColor: "red",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#fff",
-    paddingHorizontal: 5,
-    minWidth: 18,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#ffffff41",
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    height: 40,
-    borderColor: "#ffffff60",
-    borderWidth: 0.7,
-  },
-  searchIcon: {
-    marginRight: 6,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#000",
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "white",
-  },
+    badgeText: {
+        color: "#fff",
+        fontSize: 10,
+        fontWeight: "700",
+    },
+    searchContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#ffffff41",
+        borderRadius: 6,
+        paddingHorizontal: 10,
+        height: 40,
+        borderColor: "#ffffff60",
+        borderWidth: 0.7,
+    },
+    searchIcon: {
+        marginRight: 6,
+    },
+    searchInput: {
+        flex: 1,
+        color: "#000",
+    },
+    overlay: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "white",
+    },
 });

@@ -1,4 +1,3 @@
-import { Scroll } from "lucide-react-native";
 import * as React from "react";
 import {
   View,
@@ -7,6 +6,7 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function SearchPropositions() {
   return (
@@ -24,7 +24,7 @@ export default function SearchPropositions() {
           "Meeting Cars Paris",
         ].map((item, idx) => (
           <Text key={idx} style={styles.listItem}>
-            🔍 {item}
+            <Ionicons name="search-outline" size={15} color="black" /> {item}
           </Text>
         ))}
       </View>
