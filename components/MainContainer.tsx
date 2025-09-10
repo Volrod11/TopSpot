@@ -43,29 +43,29 @@ function MainContainer() {
 
                         if (rn === homeName) {
                             iconName = focused ? 'home' : 'home-outline';
-                            size = 30;
+                            size = 28;
 
                         } else if (rn === garageName) {
                             iconName = focused ? 'garage' : 'garage';
-                            size = 25;
+                            size = 28;
 
                         } else if (rn === cameraName) {
                             iconName = focused ? 'add-circle' : 'add-circle-outline';
-                            size = 40;
+                            size = 38;
 
                         } else if (rn === mapName) {
                             iconName = focused ? 'map' : 'map-outline';
-                            size = 30;
+                            size = 28;
 
                         } else if (rn === profileName) {
                             iconName = focused ? 'person' : 'person-outline';
-                            size = 30;
+                            size = 28;
 
                         }
 
                         // You can return any component that you like here!
                         if (iconName === "garage") {
-                            return <MaterialCommunityIcons name={iconName} size={42} color={color} />
+                            return <MaterialCommunityIcons name={iconName} size={38} color={color} />
                         } else {
                             return <Ionicons name={iconName} size={size} color={color} />;
                         }
@@ -75,7 +75,7 @@ function MainContainer() {
                     "tabBarInactiveTintColor": "grey",
                     "tabBarStyle": {
                         backgroundColor: '#FFFFFF',
-                        height: 90,
+                        height: 85,
                         display: route.name === cameraName ? 'none' : 'flex',
                     },
                     "headerShown": false,

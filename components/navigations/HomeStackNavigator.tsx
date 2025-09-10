@@ -4,6 +4,9 @@ import SearchPage from "../pages/SearchPage";
 import { HomeScreenStackParamList } from "../../types";
 import PicturePage from "../pages/PicturePage";
 import GaragePage from "../pages/GaragePage";
+import MessagingPage from "../pages/MessagingPage";
+import NotificationsPage from "../pages/NotificationsPage";
+import ConversationPage from "../pages/ConversationPage";
 
 
 const Stack = createNativeStackNavigator<HomeScreenStackParamList>();
@@ -24,6 +27,21 @@ export default function HomeStackNavigator() {
           animation: "slide_from_bottom", // effet qui monte
           headerShown: false, // pas de header
         }}
+      />
+      <Stack.Screen
+        name="MessagingPage"
+        component={MessagingPage}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ConversationPage"
+        component={ConversationPage}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NotificationsPage"
+        component={NotificationsPage}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="PicturePage"

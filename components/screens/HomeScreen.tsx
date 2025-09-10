@@ -78,6 +78,14 @@ export default function HomeScreen() {
         }).start();
     };
 
+    const openMessaging = () => {
+        navigation.navigate("MessagingPage");
+    };
+
+    const openNotifications = () => {
+        navigation.navigate("NotificationsPage");
+    };
+
     const closeSearch = () => {
         Animated.timing(slideAnim, {
             toValue: height,
@@ -105,7 +113,7 @@ export default function HomeScreen() {
                         <Text style={styles.title}>TopSpot</Text>
                         <View style={styles.iconsContainer}>
                             <Pressable
-                                //onPress={openNotifications}
+                                onPress={openNotifications}
                                 style={styles.iconButton}
                                 hitSlop={8}
                             >
@@ -115,7 +123,7 @@ export default function HomeScreen() {
                                 </View>
                             </Pressable>
                             <Pressable
-                                //onPress={openNotifications}
+                                onPress={openMessaging}
                                 style={[styles.iconButton, { marginLeft: 12 }]}
                                 hitSlop={8}
                             >

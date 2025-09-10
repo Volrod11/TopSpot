@@ -36,7 +36,6 @@ const data = [
     likes: 245,
     categoriesCount: 3,
   },
-  // ajoute autant de cartes que tu veux
 ];
 
 //Type
