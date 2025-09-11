@@ -48,7 +48,6 @@ const fetchPictures = async (
   sort_by?: string | null,
   query?: string | null
 ) => {
-  console.log("query : ", query);
 
   const { data, error } = await supabase.rpc("search_filtered_pictures", {
     p_user_id: user_id,
@@ -73,6 +72,8 @@ const PicturesPage = ({
   query = null,
 }: PicturesPageProps) => {
 
+
+  
   const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
   const [pictures, setPictures] = useState<Picture[]>([]);
@@ -85,7 +86,7 @@ const PicturesPage = ({
   };
 
   useEffect(() => {
-    console.log("query : ", query);
+    
 
     async function getPictures() {
       const fetchedPictures = await fetchPictures(

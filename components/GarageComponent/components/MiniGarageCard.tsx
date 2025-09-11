@@ -48,11 +48,10 @@ const MiniGarageCard = ({ garage_with_pictures }) => {
 
 const styles = StyleSheet.create({
   card: {
-    width: '48%',
+    width: '49%',
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 8,
-    marginBottom: 12,
+    padding: 6,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
@@ -66,13 +65,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   photo: {
-    width: 79,
-    height: 79,
+    width: '49%',
+    height: 1,
+    aspectRatio: 1,
+    resizeMode: 'cover',
     marginBottom: 2,
-    borderRadius: 6,
-    backgroundColor: '#ccc', // debug visuel
-  }
-  ,
+    borderRadius: 4,
+    backgroundColor: '#ccc',
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',

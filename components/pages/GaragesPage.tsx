@@ -11,32 +11,6 @@ import { useUser } from "../../context/UserContext";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { GaragesStackParamList } from "../../types";
 
-const data = [
-  {
-    id: "1",
-    user: { username: "Alex_Cars", avatar: "https://example.com/avatar1.jpg" },
-    photos: [
-      "../../assets/images/veyron.jpeg",
-      "../../assets/images/sto.jpeg",
-      "../../assets/images/svj.jpg",
-      "../../assets/images/corvette.png",
-    ],
-    likes: 189,
-    categoriesCount: 4,
-  },
-  {
-    id: "2",
-    user: { username: "SpeedQueen", avatar: "https://example.com/avatar2.jpg" },
-    photos: [
-      "../../assets/images/veyron.jpeg",
-      "../../assets/images/sto.jpeg",
-      "../../assets/images/svj.jpg",
-      "../../assets/images/corvette.png",
-    ],
-    likes: 245,
-    categoriesCount: 3,
-  },
-];
 
 //Type
 type GaragesPageNavigationProp = StackNavigationProp<
@@ -49,6 +23,7 @@ type GaragesPageProps = {
   show_my_garage: boolean;
   garage_type: string;
   is_finished?: boolean;
+  sort_by?: string | null;
   query?: string | null;
   onCountChange?: (count: number) => void;
 };
@@ -75,18 +50,9 @@ const fetchGaragesFromDatabase = async (
   is_empty_garage: boolean,
   duration_type: string,
   is_finished: boolean,
+  sort_by: string | null,
   query: string | null
 ) => {
-  console.log(
-    "Fetching garages for user_id:",
-    user_id,
-    "is_garages_page_menu:",
-    is_empty_garage,
-    "duration_type:",
-    duration_type,
-    "is_garage_finished:",
-    is_finished
-  );
 
   const { data: Garage_with_pictures, error } = await supabase.rpc(
     "get_garages_and_car_types_with_details",
@@ -95,6 +61,7 @@ const fetchGaragesFromDatabase = async (
       p_empty_garage: is_empty_garage,
       p_duration_type: duration_type,
       p_is_garage_finished: is_finished,
+      p_sort_by: sort_by,
       p_query: query,
     }
   );
@@ -112,6 +79,7 @@ const GaragesPage: React.FC<GaragesPageProps> = ({
   show_my_garage = null,
   garage_type = null,
   is_finished = null,
+  sort_by = null,
   query = null,
   onCountChange,
 }: GaragesPageProps) => {
@@ -130,6 +98,7 @@ const GaragesPage: React.FC<GaragesPageProps> = ({
             show_my_garage,
             garage_type,
             false,
+            null,
             null
           )
         : [];
@@ -138,6 +107,7 @@ const GaragesPage: React.FC<GaragesPageProps> = ({
         false,
         garage_type,
         is_finished,
+        sort_by,
         query
       );
 
@@ -175,7 +145,7 @@ const GaragesPage: React.FC<GaragesPageProps> = ({
           keyExtractor={(item) => item.garage_id}
           numColumns={2}
           columnWrapperStyle={styles.row}
-          contentContainerStyle={{ padding: 12, flexGrow: 1 }}
+          contentContainerStyle={{ padding: 5, paddingTop : 0, flexGrow: 1 }}
           ListHeaderComponent={
             show_my_garage ? (
               <View style={styles.myGarageCard}>

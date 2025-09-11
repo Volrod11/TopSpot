@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const CardSection = ({ title, children }) => {
+const MultipleCardSection = ({ title, children }) => {
     return (
         <View style={styles.cardSection}>
             {title && <Text style={styles.title}>{title}</Text>}
@@ -12,16 +12,12 @@ const CardSection = ({ title, children }) => {
     );
 };
 
-export default CardSection;
+export default MultipleCardSection;
 
 const styles = StyleSheet.create({
     cardSection: {
         width: '100%',
         padding: 16,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 6,
     },
     card: {
         backgroundColor: '#fff',

@@ -1,17 +1,14 @@
-import * as React from "react";
+import { useCallback, useState } from "react";
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
-    Image,
     Pressable,
     Dimensions,
     Animated,
+    ActivityIndicator,
 } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -22,7 +19,6 @@ import SharedGarage from "../HomeComponent/components/SharedGarage";
 import SharedPicture from "../HomeComponent/components/SharedPicture";
 import FourPictures from "../HomeComponent/components/FourPictures";
 import { Ionicons } from "@expo/vector-icons";
-import { TextInput } from "react-native-gesture-handler";
 import CardSection from "../HomeComponent/components/CardSection";
 import NearbyEvent from "../HomeComponent/components/NearbyEvent";
 import Garage from "../HomeComponent/components/Garage";
@@ -32,7 +28,11 @@ import SuggestedProfiles from "../HomeComponent/components/SuggestedProfiles";
 import { supabase } from "../../lib/supabase";
 import { HomeScreenStackParamList } from "../../types";
 import SearchPage from "../pages/SearchPage";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
+import MultipleCardSection from "../HomeComponent/MultipleCardSection";
+import { FlatList } from "react-native-gesture-handler";
+import { useUser } from "../../context/UserContext";
+import LoadingSpinner from "../HomeComponent/components/LoadingSpinner";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -42,12 +42,35 @@ type HomeScreenNavigationProp = StackNavigationProp<
     "HomeScreen"
 >;
 
+type HeaderProps = {
+    openSearch: () => void;
+};
+
+type Filters = {
+    sortBy?: string;
+    brand?: string;
+    period?: string;
+    query?: string;
+};
+
 type HomepageContent = {
     id: string;
     type: "garage" | "picture" | "event";
     title: string;
-    filters: JSON;
+    filters: Filters;
 };
+
+type Pictures = {
+    picture_id: string;
+    description: string | null;
+    picture_url: string;
+    user_id: string;
+    username: string;
+    avatar_url: string | null;
+    likes_count: number;
+    comments_count: number;
+    relevance_score: number;
+}
 
 
 const fetchHomepageContents = async () => {
@@ -62,12 +85,139 @@ const fetchHomepageContents = async () => {
     return data as HomepageContent[];
 };
 
-export default function HomeScreen() {
-    const navigation = useNavigation<HomeScreenNavigationProp>();
+const fetchHomePagePictures = async (user_id: string, limit: number, offset: number) => {
+    console.log("limit : ", limit);
+
+    const { data, error } = await supabase.rpc("get_home_feed_pictures", { p_user_id: user_id, p_limit: limit, p_offset: offset });
+    if (error) {
+        console.error("Error fetching homepage pictures:", error);
+        return [];
+    }
+    console.log("data fetchHomePagePictures : ", data.length);
+
+    return data as Pictures[];
+}
+
+const Header = ({ openSearch }: HeaderProps) => {
     const slideAnim = useRef(new Animated.Value(height)).current;
 
-    const [search, setSearch] = React.useState("");
-    const [searchVisible, setSearchVisible] = React.useState(false);
+    const navigation = useNavigation<HomeScreenNavigationProp>();
+
+    const openMessaging = () => {
+        navigation.navigate("MessagingPage");
+    };
+
+    const openNotifications = () => {
+        navigation.navigate("NotificationsPage");
+    };
+
+
+    return (
+        <LinearGradient
+            colors={["#667DE9", "#764DA4"]}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.gradient}
+        >
+            <View style={styles.topRow}>
+                <Text style={styles.title}>TopSpot</Text>
+                <View style={styles.iconsContainer}>
+                    <Pressable
+                        onPress={openNotifications}
+                        style={styles.iconButton}
+                        hitSlop={8}
+                    >
+                        <Ionicons name="notifications-outline" size={20} color="#fff" />
+                        <View style={styles.badge}>
+                            <Text style={styles.badgeText}>3</Text>
+                        </View>
+                    </Pressable>
+                    <Pressable
+                        onPress={openMessaging}
+                        style={[styles.iconButton, { marginLeft: 12 }]}
+                        hitSlop={8}
+                    >
+                        <Ionicons name="chatbox-outline" size={20} color="#fff" />
+                        <View style={styles.badge}>
+                            <Text style={styles.badgeText}>3</Text>
+                        </View>
+                    </Pressable>
+
+                    <Pressable
+                        onPress={openSearch}
+                        style={[styles.iconButton, { marginLeft: 12 }]}
+                        hitSlop={8}
+                    >
+                        <Ionicons name="search-outline" size={20} color="#fff" />
+                    </Pressable>
+                </View>
+            </View>
+        </LinearGradient >
+    )
+}
+
+export default function HomeScreen() {
+
+    const slideAnim = useRef(new Animated.Value(height)).current;
+    const { currentUserId } = useUser()
+
+    const [userId, setUserId] = useState<string>(null);
+    const [searchVisible, setSearchVisible] = useState(false);
+
+    const [homepageContents, setHomepageContents] = useState<HomepageContent[]>([]);
+    const [pictures, setPictures] = useState<Pictures[]>([]);
+    const [offset, setOffset] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
+    const limit = 4;
+
+
+
+    useEffect(() => {
+        if (currentUserId) setUserId(currentUserId);
+    }, [currentUserId]);
+
+    useEffect(() => {
+        const fetchDataHomepage = async () => {
+            const loadedHomepageContents = await fetchHomepageContents();
+            setHomepageContents(loadedHomepageContents);
+        };
+
+        fetchDataHomepage();
+    }, []);
+
+
+    const loadPictures = useCallback(async () => {
+        if (!userId || loading || !hasMore) return;
+        setLoading(true);
+
+        const newPictures = await fetchHomePagePictures(userId, limit, offset);
+
+        setPictures((prev) => {
+            const ids = new Set(prev.map(p => p.picture_id));
+            const filtered = newPictures.filter(p => !ids.has(p.picture_id));
+            return [...prev, ...filtered];
+        });
+
+        setOffset(prev => prev + limit);
+
+        if (newPictures.length < limit) setHasMore(false);
+
+        setLoading(false);
+    }, [userId, offset, loading, hasMore]);
+
+    useEffect(() => {
+        if (userId) {
+            setPictures([]);
+            setOffset(0);
+            setHasMore(true);
+            loadPictures();
+        }
+    }, [userId]);
+
+
+
 
     const openSearch = () => {
         setSearchVisible(true);
@@ -76,14 +226,6 @@ export default function HomeScreen() {
             duration: 300,
             useNativeDriver: true,
         }).start();
-    };
-
-    const openMessaging = () => {
-        navigation.navigate("MessagingPage");
-    };
-
-    const openNotifications = () => {
-        navigation.navigate("NotificationsPage");
     };
 
     const closeSearch = () => {
@@ -96,181 +238,46 @@ export default function HomeScreen() {
         });
     };
 
+
+
     return (
         <View style={styles.homePage}>
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.scrollView}
-            >
-                <LinearGradient
-                    colors={["#667DE9", "#764DA4"]}
-                    start={{ x: 1, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={styles.gradient}
-                >
-                    <View style={styles.topRow}>
-                        <Text style={styles.title}>TopSpot</Text>
-                        <View style={styles.iconsContainer}>
-                            <Pressable
-                                onPress={openNotifications}
-                                style={styles.iconButton}
-                                hitSlop={8}
-                            >
-                                <Ionicons name="notifications-outline" size={20} color="#fff" />
-                                <View style={styles.badge}>
-                                    <Text style={styles.badgeText}>3</Text>
-                                </View>
-                            </Pressable>
-                            <Pressable
-                                onPress={openMessaging}
-                                style={[styles.iconButton, { marginLeft: 12 }]}
-                                hitSlop={8}
-                            >
-                                <Ionicons name="chatbox-outline" size={20} color="#fff" />
-                                <View style={styles.badge}>
-                                    <Text style={styles.badgeText}>3</Text>
-                                </View>
-                            </Pressable>
+            <FlatList
+                style={{ flex: 1 }}
+                data={pictures}
+                keyExtractor={(item) => item.picture_id}
+                onEndReached={loadPictures}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={loading ? <LoadingSpinner /> : null}
+                renderItem={({ item }) => (
+                    <CardSection
+                        title={"Test"}
+                    >
+                        <Picture
+                            picture_url={item.picture_url}
+                            user_id={null}
+                        />
+                    </CardSection>
+                )}
+                ListHeaderComponent={
+                    <>
+                        <Header openSearch={openSearch} />
+                        <CardSection
+                            title="Garage du Mois"
+                        >
+                            <MonthlyGarage />
+                        </CardSection>
 
-                            <Pressable
-                                onPress={openSearch}
-                                style={[styles.iconButton, { marginLeft: 12 }]}
-                                hitSlop={8}
-                            >
-                                <Ionicons name="search-outline" size={20} color="#fff" />
-                            </Pressable>
-                        </View>
-                    </View>
-                </LinearGradient>
+                        <MultipleCardSection
+                            title="Spots récents"
+                        >
+                            <LastsSpots />
+                        </MultipleCardSection>
+                    </>
+                }
+            />
 
-                <CardSection
-                    title="Garage du Mois"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <MonthlyGarage />
-                </CardSection>
 
-                <CardSection
-                    title="Spots récents"
-                    style={undefined}
-                    titleStyle={undefined}
-                >
-                    <LastsSpots />
-                </CardSection>
-
-                <CardSection
-                    title="Événement Proche"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <NearbyEvent />
-                </CardSection>
-
-                <CardSection
-                    title="Garage"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <Garage />
-                </CardSection>
-                <CardSection
-                    title="Garage"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <Garage />
-                </CardSection>
-                <CardSection
-                    title="Garage"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <Garage />
-                </CardSection>
-
-                <CardSection
-                    title="Photos"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <Picture picture_url={require("../../assets/images/cullinan.jpeg")} />
-                </CardSection>
-                <CardSection
-                    title="Photos"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <Picture picture_url={require("../../assets/images/rs6gt.jpeg")} />
-                </CardSection>
-                <CardSection
-                    title="Photos"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <Picture picture_url={require("../../assets/images/ford_gt.jpeg")} />
-                </CardSection>
-
-                <CardSection
-                    title="Photos"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowRadius: 6,
-                    }}
-                    titleStyle={undefined}
-                >
-                    <SuggestedProfiles />
-                </CardSection>
-
-                <WeeklyPic />
-                <MonthlyGarage />
-                <SharedGarage />
-                <FourPictures />
-                <SharedPicture />
-            </ScrollView>
 
             {/* Overlay SearchScreen */}
             {searchVisible && (

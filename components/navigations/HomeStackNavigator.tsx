@@ -7,6 +7,8 @@ import GaragePage from "../pages/GaragePage";
 import MessagingPage from "../pages/MessagingPage";
 import NotificationsPage from "../pages/NotificationsPage";
 import ConversationPage from "../pages/ConversationPage";
+import PicturesPage from "../pages/PicturesPage";
+import GaragesPage from "../pages/GaragesPage";
 
 
 const Stack = createNativeStackNavigator<HomeScreenStackParamList>();
@@ -44,8 +46,18 @@ export default function HomeStackNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="PicturesPage"
+        component={PicturesPage}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="PicturePage"
         component={PicturePage}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="GaragesPage"
+        component={GaragesPage}
         options={{ headerShown: false }}
       />
       <Stack.Screen

@@ -19,7 +19,9 @@ export type HomeScreenStackParamList = {
   MessagingPage: {};
   ConversationPage: { conversation_id: string };
   NotificationsPage: {};
+  PicturesPage: { user_id: string | null; brand_filter?: string | null; period?: string | null; sort_by?: string | null; query?: string | null };
   PicturePage: { idPicture: string; picture: string };
+  GaragesPage: { user_id: string; show_my_garage: boolean; garage_type: string; is_finished?: boolean | null; sort_by?: string | null; query?: string | null; onCountChange?: (count: number) => void };
   GaragePage: { garage_id: string };
 };
 
@@ -58,6 +60,7 @@ export type GaragesStackParamList = {
     show_my_garage: boolean;
     garage_type: string;
     is_finished?: boolean | null;
+    sort_by?: string | null;
     query?: string | null;
     onCountChange?: (count: number) => void;
   };

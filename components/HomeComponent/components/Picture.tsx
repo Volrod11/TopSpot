@@ -4,20 +4,40 @@ import { MaterialCommunityIcons } from '@expo/vector-icons'; // You'll need to i
 import { HomeScreenStackParamList } from '../../../types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-type NavigationProp = StackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>;
 
+type PicturesPageProps = {
+  picture_url?: string | { uri: string };
+  user_id: string | null;
+  brand_filter?: string | null;
+  period?: string | null;
+  sort_by?: string | null;
+  query?: string | null;
+}
 
-const Picture = ({ picture_url }) => {
-  const navigation = useNavigation<NavigationProp>();
+const Picture = ({
+  picture_url = null,
+  user_id = null,
+  brand_filter = null,
+  period = null,
+  sort_by = null,
+  query = null,
+}: PicturesPageProps) => {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
+
+  
   return (
     <View style={styles.card}>
       <Pressable onPress={() =>
-          navigation.navigate("PicturesStack", {
-            screen: "PicturesPage",
-            params: { user_id: null, brand_filter: 'Chevrolet' }
-          })
-        }>
+        navigation.navigate('PicturesPage', {
+          user_id: user_id,
+          brand_filter : brand_filter,
+          period : period,
+          sort_by : sort_by,
+          query : query
+        })
+      }>
         {/* Header */}
         <View style={styles.header}>
           <Image
