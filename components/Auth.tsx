@@ -1,12 +1,7 @@
 import React, { useState } from 'react'
-import { Alert, StyleSheet, View, AppState } from 'react-native'
+import { Alert, StyleSheet, View, AppState, Button, TextInput, Text } from 'react-native'
 import { supabase } from '../lib/supabase'
-import { Button, Input } from '@rneui/themed'
-import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StatusBar } from 'expo-status-bar';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 
 
@@ -67,24 +62,24 @@ export default function Auth() {
   return (
     <View style={styles.container}>
       <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="Email"
-          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-          onChangeText={(text) => setEmail(text)}
+        <Text>Email</Text>
+        <TextInput
+          style={styles.input}
           value={email}
+          onChangeText={setEmail}
           placeholder="email@address.com"
-          autoCapitalize={'none'}
+          autoCapitalize="none"
         />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input
-          label="Password"
-          leftIcon={{ type: 'font-awesome', name: 'lock' }}
-          onChangeText={(text) => setPassword(text)}
+        <Text>Password</Text>
+        <TextInput
+          style={styles.input}
           value={password}
-          secureTextEntry={true}
+          onChangeText={setPassword}
           placeholder="Password"
-          autoCapitalize={'none'}
+          secureTextEntry
+          autoCapitalize="none"
         />
       </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -109,5 +104,13 @@ const styles = StyleSheet.create({
   },
   mt20: {
     marginTop: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 16,
   },
 })

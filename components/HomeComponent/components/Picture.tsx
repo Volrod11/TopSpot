@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: 300, // Adjust height as needed
+    aspectRatio: 1,
     resizeMode: 'cover',
   },
   actions: {

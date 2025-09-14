@@ -5,11 +5,11 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeScreenStackParamList } from '../../../types';
 
-type GaragesPageProps = {
-    user_id: string | null;
-    show_my_garage: boolean;
-    garage_type: string;
-    is_finished?: boolean;
+type GarageProps = {
+    user_id?: string | null;
+    show_my_garage?: boolean | null;
+    garage_type?: string |null;
+    is_finished?: boolean | null;
     sort_by?: string | null;
     query?: string | null;
 };
@@ -69,40 +69,45 @@ const Garage = ({
     is_finished = null,
     sort_by = null,
     query = null,
-}: GaragesPageProps) => {
+}: GarageProps) => {
     const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
     return (
-        <Pressable onPress={() =>
-            navigation.navigate('GaragesPage', {
-                user_id : user_id,
-                show_my_garage : show_my_garage,
-                garage_type : garage_type,
-                is_finished : is_finished,
-                sort_by : sort_by,
-                query : query,
-            })
-        }>
-            <PictureCard
-                avatarUrl="https://i.pravatar.cc/100?img=8"
-                username="Alex_SuperCars"
-                location="Paris, France"
-                isTopSpot={true}
-                isComplete={true}
-                likes={1200}
-                comments={87}
-                images={[
-                    require('../../../assets/images/sto.jpeg'),
-                    require('../../../assets/images/chiron.jpeg'),
-                    require('../../../assets/images/911dakar.jpeg'),
-                    require('../../../assets/images/mustang.jpeg'),
-                ]}
-            />
-        </Pressable>
+        <View style={styles.container}>
+            <Pressable onPress={() =>
+                navigation.navigate('GaragesPage', {
+                    user_id: user_id,
+                    show_my_garage: show_my_garage,
+                    garage_type: garage_type,
+                    is_finished: is_finished,
+                    sort_by: sort_by,
+                    query: query,
+                })
+            }>
+                <PictureCard
+                    avatarUrl="https://i.pravatar.cc/100?img=8"
+                    username="Alex_SuperCars"
+                    location="Paris, France"
+                    isTopSpot={true}
+                    isComplete={true}
+                    likes={1200}
+                    comments={87}
+                    images={[
+                        require('../../../assets/images/sto.jpeg'),
+                        require('../../../assets/images/chiron.jpeg'),
+                        require('../../../assets/images/911dakar.jpeg'),
+                        require('../../../assets/images/mustang.jpeg'),
+                    ]}
+                />
+            </Pressable>
+        </View>
     )
 }
 
 const styles = StyleSheet.create({
+    container : {
+        flex: 1,
+    },
     card: {
         backgroundColor: '#ffffffff',
         borderRadius: 16,

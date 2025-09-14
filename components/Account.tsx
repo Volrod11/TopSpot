@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { StyleSheet, View, Alert, Text } from 'react-native'
-import { Button, Input } from '@rneui/themed'
+import { StyleSheet, View, Alert, Text, Button, TextInput } from 'react-native'
 import { Session } from '@supabase/supabase-js'
 import { FlashList } from '@shopify/flash-list';
 import React from 'react'
@@ -91,13 +90,28 @@ export default function Account({ session }: { session: Session }) {
   return (
     <View style={styles.container}>
       <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input label="Email" value={session?.user?.email} disabled />
+        <Text>Email</Text>
+        <TextInput
+          value={session?.user?.email}
+          editable={false}
+          style={[styles.input, { backgroundColor: '#eee' }]}
+        />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input label="Username" value={username || ''} onChangeText={(text) => setUsername(text)} />
+        <Text>Username</Text>
+        <TextInput
+          value={username}
+          onChangeText={setUsername}
+          style={styles.input}
+        />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input label="Website" value={website || ''} onChangeText={(text) => setWebsite(text)} />
+        <Text>Website</Text>
+        <TextInput
+          value={website}
+          onChangeText={setWebsite}
+          style={styles.input}
+        />
       </View>
 
       <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -116,7 +130,6 @@ export default function Account({ session }: { session: Session }) {
         <FlashList
           data={DATA}
           renderItem={({ item }) => <Text>{item.title}</Text>}
-          estimatedItemSize={200}
         />
       </View>
 
@@ -136,5 +149,13 @@ const styles = StyleSheet.create({
   },
   mt20: {
     marginTop: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 16,
   },
 })

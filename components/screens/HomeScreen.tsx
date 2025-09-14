@@ -7,24 +7,16 @@ import {
     Pressable,
     Dimensions,
     Animated,
-    ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
 import MonthlyGarage from "../HomeComponent/components/MonthlyGarage";
-import WeeklyPic from "../HomeComponent/components/WeeklyPic";
-import SharedGarage from "../HomeComponent/components/SharedGarage";
-import SharedPicture from "../HomeComponent/components/SharedPicture";
-import FourPictures from "../HomeComponent/components/FourPictures";
 import { Ionicons } from "@expo/vector-icons";
 import CardSection from "../HomeComponent/components/CardSection";
-import NearbyEvent from "../HomeComponent/components/NearbyEvent";
-import Garage from "../HomeComponent/components/Garage";
 import LastsSpots from "../HomeComponent/components/LastsSpots";
 import Picture from "../HomeComponent/components/Picture";
-import SuggestedProfiles from "../HomeComponent/components/SuggestedProfiles";
 import { supabase } from "../../lib/supabase";
 import { HomeScreenStackParamList } from "../../types";
 import SearchPage from "../pages/SearchPage";
@@ -33,6 +25,8 @@ import MultipleCardSection from "../HomeComponent/MultipleCardSection";
 import { FlatList } from "react-native-gesture-handler";
 import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../HomeComponent/components/LoadingSpinner";
+import Garage from "../HomeComponent/components/Garage";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -41,6 +35,10 @@ type HomeScreenNavigationProp = StackNavigationProp<
     HomeScreenStackParamList,
     "HomeScreen"
 >;
+
+type HomeScreenParams = {
+  refresh?: () => void;
+};
 
 type HeaderProps = {
     openSearch: () => void;
@@ -72,6 +70,26 @@ type Pictures = {
     relevance_score: number;
 }
 
+type Picture = {
+  id: string | null;
+  url: string | null;
+  car_type: string;
+};
+
+type Garage_with_pictures = {
+  garage_id: string;
+  username: string;
+  avatar_url: string | null;
+  nb_categories: number;
+  total_likes: number;
+  total_comments: number;
+  total_pictures: number;
+  total_views: number;
+  created_at: string;
+  rang: number;
+  top_pictures_by_category: Picture[];
+};
+
 
 const fetchHomepageContents = async () => {
     const { data, error } = await supabase.rpc("get_random_sections", {
@@ -85,17 +103,36 @@ const fetchHomepageContents = async () => {
     return data as HomepageContent[];
 };
 
-const fetchHomePagePictures = async (user_id: string, limit: number, offset: number) => {
-    console.log("limit : ", limit);
+const fetchHomePagePictures = async (limit: number, offset: number) => {
 
-    const { data, error } = await supabase.rpc("get_home_feed_pictures", { p_user_id: user_id, p_limit: limit, p_offset: offset });
+    const { data, error } = await supabase.rpc("get_home_feed_pictures", { p_limit: limit, p_offset: offset });
     if (error) {
         console.error("Error fetching homepage pictures:", error);
         return [];
     }
-    console.log("data fetchHomePagePictures : ", data.length);
+    console.log("data fetchHomePagePictures : ", data);
 
     return data as Pictures[];
+}
+
+const fetchHomePageGarages = async (limit: number, offset: number) => {
+    const { data, error } = await supabase.rpc("get_garages_and_car_types_with_details", {
+        p_query: null,
+        p_profile: null,
+        p_only_one: false,
+        p_empty_garage: false,
+        p_is_garage_finished: true,
+        p_duration_type: "monthly",
+        p_sort_by: null,
+        p_limit: limit,
+        p_offset: offset,
+    });
+    if (error) {
+        console.error("Error fetching homepage garages:", error);
+        return [];
+    }
+
+    return data as Garage_with_pictures[];
 }
 
 const Header = ({ openSearch }: HeaderProps) => {
@@ -159,24 +196,18 @@ const Header = ({ openSearch }: HeaderProps) => {
 export default function HomeScreen() {
 
     const slideAnim = useRef(new Animated.Value(height)).current;
-    const { currentUserId } = useUser()
+    const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>>();
 
-    const [userId, setUserId] = useState<string>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
     const [searchVisible, setSearchVisible] = useState(false);
-
     const [homepageContents, setHomepageContents] = useState<HomepageContent[]>([]);
     const [pictures, setPictures] = useState<Pictures[]>([]);
     const [offset, setOffset] = useState(0);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    const limit = 4;
+    const limit = 10;
 
-
-
-    useEffect(() => {
-        if (currentUserId) setUserId(currentUserId);
-    }, [currentUserId]);
 
     useEffect(() => {
         const fetchDataHomepage = async () => {
@@ -189,10 +220,10 @@ export default function HomeScreen() {
 
 
     const loadPictures = useCallback(async () => {
-        if (!userId || loading || !hasMore) return;
+        if (loading || !hasMore) return;
         setLoading(true);
 
-        const newPictures = await fetchHomePagePictures(userId, limit, offset);
+        const newPictures = await fetchHomePagePictures(limit, offset);
 
         setPictures((prev) => {
             const ids = new Set(prev.map(p => p.picture_id));
@@ -205,18 +236,17 @@ export default function HomeScreen() {
         if (newPictures.length < limit) setHasMore(false);
 
         setLoading(false);
-    }, [userId, offset, loading, hasMore]);
+    }, [offset, loading, hasMore]);
 
     useEffect(() => {
-        if (userId) {
-            setPictures([]);
-            setOffset(0);
-            setHasMore(true);
-            loadPictures();
-        }
-    }, [userId]);
+        setPictures([]);
+        loadPictures();
+    }, [refreshKey]);
 
 
+    useEffect(() => {
+    navigation.setParams({ refresh: () => setRefreshKey(prev => prev + 1) });
+}, []);
 
 
     const openSearch = () => {
@@ -250,9 +280,7 @@ export default function HomeScreen() {
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={loading ? <LoadingSpinner /> : null}
                 renderItem={({ item }) => (
-                    <CardSection
-                        title={"Test"}
-                    >
+                    <CardSection>
                         <Picture
                             picture_url={item.picture_url}
                             user_id={null}
@@ -265,7 +293,7 @@ export default function HomeScreen() {
                         <CardSection
                             title="Garage du Mois"
                         >
-                            <MonthlyGarage />
+                            <Garage show_my_garage={false} />
                         </CardSection>
 
                         <MultipleCardSection
@@ -273,6 +301,14 @@ export default function HomeScreen() {
                         >
                             <LastsSpots />
                         </MultipleCardSection>
+                        <CardSection
+                            title={"test"}
+                        >
+                            <Picture
+                                picture_url={"https://aosttdzezofbyaimkdnd.supabase.co/storage/v1/object/public/pictures/bj71.jpg"}
+                                user_id={null}
+                            />
+                        </CardSection>
                     </>
                 }
             />
@@ -294,7 +330,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     homePage: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "#fff",
     },
     text: {
         fontSize: 26,

@@ -7,7 +7,7 @@ import { Session } from '@supabase/supabase-js'
 import { useUser } from '../context/UserContext';
 
 
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // Screens
@@ -67,7 +67,7 @@ function MainContainer() {
                         if (iconName === "garage") {
                             return <MaterialCommunityIcons name={iconName} size={38} color={color} />
                         } else {
-                            return <Ionicons name={iconName} size={size} color={color} />;
+                            return <Ionicons name={iconName as any} size={size} color={color} />;
                         }
 
                     },
