@@ -41,6 +41,10 @@ type Garage_with_pictures = {
   nb_categories: number;
   total_likes: number;
   total_comments: number;
+  total_pictures: number;
+  total_views: number;
+  created_at: string;
+  rang: number;
   top_pictures_by_category: Picture[];
 };
 
@@ -94,13 +98,13 @@ const GaragesPage: React.FC<GaragesPageProps> = ({
     const fetchData = async () => {
       const fetchedMyGarage = show_my_garage
         ? await fetchGaragesFromDatabase(
-            currentUserId,
-            show_my_garage,
-            garage_type,
-            false,
-            null,
-            null
-          )
+          currentUserId,
+          show_my_garage,
+          garage_type,
+          false,
+          null,
+          null
+        )
         : [];
       const fetchedGarages = await fetchGaragesFromDatabase(
         user_id,
@@ -145,7 +149,7 @@ const GaragesPage: React.FC<GaragesPageProps> = ({
           keyExtractor={(item) => item.garage_id}
           numColumns={2}
           columnWrapperStyle={styles.row}
-          contentContainerStyle={{ padding: 5, paddingTop : 0, flexGrow: 1 }}
+          contentContainerStyle={{ padding: 5, paddingTop: 0, flexGrow: 1 }}
           ListHeaderComponent={
             show_my_garage ? (
               <View style={styles.myGarageCard}>

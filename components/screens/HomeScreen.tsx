@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { use, useCallback, useState } from "react";
 import {
     View,
     Text,
@@ -27,6 +27,7 @@ import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../HomeComponent/components/LoadingSpinner";
 import Garage from "../HomeComponent/components/Garage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { log } from "console";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -35,10 +36,6 @@ type HomeScreenNavigationProp = StackNavigationProp<
     HomeScreenStackParamList,
     "HomeScreen"
 >;
-
-type HomeScreenParams = {
-  refresh?: () => void;
-};
 
 type HeaderProps = {
     openSearch: () => void;
@@ -58,7 +55,7 @@ type HomepageContent = {
     filters: Filters;
 };
 
-type Pictures = {
+type Pictures_with_infos = {
     picture_id: string;
     description: string | null;
     picture_url: string;
@@ -71,24 +68,28 @@ type Pictures = {
 }
 
 type Picture = {
-  id: string | null;
-  url: string | null;
-  car_type: string;
+    id: string | null;
+    url: string | null;
+    car_type: string;
 };
 
 type Garage_with_pictures = {
-  garage_id: string;
-  username: string;
-  avatar_url: string | null;
-  nb_categories: number;
-  total_likes: number;
-  total_comments: number;
-  total_pictures: number;
-  total_views: number;
-  created_at: string;
-  rang: number;
-  top_pictures_by_category: Picture[];
+    garage_id: string;
+    username: string;
+    avatar_url: string | null;
+    nb_categories: number;
+    total_likes: number;
+    total_comments: number;
+    total_pictures: number;
+    total_views: number;
+    created_at: string;
+    rang: number;
+    top_pictures_by_category: Picture[];
 };
+
+type FeedItem =
+    | { type: "picture"; data: Pictures_with_infos }
+    | { type: "garage"; data: Garage_with_pictures };
 
 
 const fetchHomepageContents = async () => {
@@ -110,9 +111,8 @@ const fetchHomePagePictures = async (limit: number, offset: number) => {
         console.error("Error fetching homepage pictures:", error);
         return [];
     }
-    console.log("data fetchHomePagePictures : ", data);
 
-    return data as Pictures[];
+    return data as Pictures_with_infos[];
 }
 
 const fetchHomePageGarages = async (limit: number, offset: number) => {
@@ -198,15 +198,20 @@ export default function HomeScreen() {
     const slideAnim = useRef(new Animated.Value(height)).current;
     const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>>();
 
-    const [refreshKey, setRefreshKey] = useState(0);
     const [searchVisible, setSearchVisible] = useState(false);
     const [homepageContents, setHomepageContents] = useState<HomepageContent[]>([]);
-    const [pictures, setPictures] = useState<Pictures[]>([]);
+    const [pictures, setPictures] = useState<Pictures_with_infos[]>([]);
+    const [garages, setGarages] = useState<Garage_with_pictures[]>([]);
     const [offset, setOffset] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
+    const [hasMorePicture, setHasMorePicture] = useState(true);
+    const [hasMoreGarage, setHasMoreGarage] = useState(true);
+    const [items, setItems] = useState<FeedItem[]>([]);
+    const [test, setTest] = useState(0);
 
     const limit = 10;
+    const addedPictureIds = useRef<Set<string>>(new Set());
+    const addedGarageIds = useRef<Set<string>>(new Set());
 
 
     useEffect(() => {
@@ -219,34 +224,65 @@ export default function HomeScreen() {
     }, []);
 
 
-    const loadPictures = useCallback(async () => {
-        if (loading || !hasMore) return;
+    const loadPicturesAndGarages = useCallback(async () => {
+        if (loading || (!hasMorePicture && !hasMoreGarage)) return;
         setLoading(true);
 
-        const newPictures = await fetchHomePagePictures(limit, offset);
 
-        setPictures((prev) => {
-            const ids = new Set(prev.map(p => p.picture_id));
-            const filtered = newPictures.filter(p => !ids.has(p.picture_id));
-            return [...prev, ...filtered];
-        });
+        let newPictures: Pictures_with_infos[] = [];
+        let newGarages: Garage_with_pictures[] = [];
+        let filteredPictures: Pictures_with_infos[] = [];
+        let filteredGarages: Garage_with_pictures[] = [];
+
+        if (hasMorePicture) {
+            newPictures = await fetchHomePagePictures(limit, offset);
+            filteredPictures = newPictures.filter(
+                p => !addedPictureIds.current.has(p.picture_id)
+            );
+            filteredPictures.forEach(p => addedPictureIds.current.add(p.picture_id));
+
+            setPictures((prev => [...prev, ...filteredPictures]));
+        }
+
+
+
+        if (hasMoreGarage) {
+            newGarages = await fetchHomePageGarages(limit, offset);
+            filteredGarages = newGarages.filter(
+                p => !addedGarageIds.current.has(p.garage_id)
+            );
+            filteredGarages.forEach(p => addedGarageIds.current.add(p.garage_id));
+
+            setGarages((prev => [...prev, ...filteredGarages]))
+        }
+
+
+        const merged: FeedItem[] = [
+            ...filteredPictures.map(p => ({ type: 'picture' as const, data: p })),
+            ...filteredGarages.map(g => ({ type: 'garage' as const, data: g }))
+        ];
+
+        merged.sort(() => Math.random() - 0.5);
+
+        setItems(prev => [...prev, ...merged]);
 
         setOffset(prev => prev + limit);
 
-        if (newPictures.length < limit) setHasMore(false);
+        if (newPictures.length < limit && newGarages.length < limit) {
+            setHasMorePicture(false);
+            setHasMoreGarage(false);
+        }
 
         setLoading(false);
-    }, [offset, loading, hasMore]);
+    }, [offset, loading, hasMorePicture, hasMoreGarage]);
+
 
     useEffect(() => {
         setPictures([]);
-        loadPictures();
-    }, [refreshKey]);
+        setGarages([]);
+        loadPicturesAndGarages();
+    }, []);
 
-
-    useEffect(() => {
-    navigation.setParams({ refresh: () => setRefreshKey(prev => prev + 1) });
-}, []);
 
 
     const openSearch = () => {
@@ -270,45 +306,56 @@ export default function HomeScreen() {
 
 
 
+
+
     return (
         <View style={styles.homePage}>
             <FlatList
                 style={{ flex: 1 }}
-                data={pictures}
-                keyExtractor={(item) => item.picture_id}
-                onEndReached={loadPictures}
+                data={items}
+                keyExtractor={(item) =>
+                    item.type === 'picture' ? `pic-${item.data.picture_id}` : `garage-${item.data.garage_id}`
+                }
+                onEndReached={loadPicturesAndGarages}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={loading ? <LoadingSpinner /> : null}
-                renderItem={({ item }) => (
-                    <CardSection>
-                        <Picture
-                            picture_url={item.picture_url}
-                            user_id={null}
-                        />
-                    </CardSection>
-                )}
+                renderItem={({ item }) => {
+                    if (item.type === 'picture') {
+                        return (
+                            <CardSection>
+                                <Picture
+                                    picture_id = {item.data.picture_id}
+                                    description = {item.data.description}
+                                    picture_url = {item.data.picture_url}
+                                    user_id = {item.data.user_id}
+                                    username = {item.data.username}
+                                    avatar_url = {item.data.avatar_url}
+                                    likes_count = {item.data.likes_count}
+                                    comments_count = {item.data.comments_count}
+                                />
+                            </CardSection>
+                        );
+                    } else {
+                        return (
+                            <CardSection title="Garage">
+                                <Garage 
+                                    garage={item.data}
+                                />
+                            </CardSection>
+                        );
+                    }
+                }}
                 ListHeaderComponent={
                     <>
                         <Header openSearch={openSearch} />
-                        <CardSection
-                            title="Garage du Mois"
-                        >
-                            <Garage show_my_garage={false} />
-                        </CardSection>
+
 
                         <MultipleCardSection
                             title="Spots récents"
                         >
                             <LastsSpots />
                         </MultipleCardSection>
-                        <CardSection
-                            title={"test"}
-                        >
-                            <Picture
-                                picture_url={"https://aosttdzezofbyaimkdnd.supabase.co/storage/v1/object/public/pictures/bj71.jpg"}
-                                user_id={null}
-                            />
-                        </CardSection>
+
                     </>
                 }
             />

@@ -7,7 +7,6 @@ type CardSectionProps ={
 }
 
 const CardSection: React.FC<CardSectionProps> = ({ title = null, children }) => {
-    console.log(title);
     
     return (
         <View style={styles.cardSection}>

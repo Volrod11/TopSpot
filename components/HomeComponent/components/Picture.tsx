@@ -8,36 +8,32 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 
 type PicturesPageProps = {
-  picture_url?: string | { uri: string };
-  user_id: string | null;
-  brand_filter?: string | null;
-  period?: string | null;
-  sort_by?: string | null;
-  query?: string | null;
+  picture_id: string;
+  description: string | null;
+  picture_url: string;
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  likes_count: number;
+  comments_count: number;
 }
 
 const Picture = ({
-  picture_url = null,
-  user_id = null,
-  brand_filter = null,
-  period = null,
-  sort_by = null,
-  query = null,
+  picture_id,
+  description,
+  picture_url,
+  user_id,
+  username,
+  avatar_url,
+  likes_count,
+  comments_count
 }: PicturesPageProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
-  
+
   return (
     <View style={styles.card}>
-      <Pressable onPress={() =>
-        navigation.navigate('PicturesPage', {
-          user_id: user_id,
-          brand_filter : brand_filter,
-          period : period,
-          sort_by : sort_by,
-          query : query
-        })
-      }>
+      <Pressable>
         {/* Header */}
         <View style={styles.header}>
           <Image
@@ -45,7 +41,7 @@ const Picture = ({
             style={styles.avatar}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.username}>PorscheHunter</Text>
+            <Text style={styles.username}>{username}</Text>
             <Text style={styles.location}>Monaco</Text>
           </View>
           <TouchableOpacity style={styles.moreIcon}>
@@ -64,11 +60,11 @@ const Picture = ({
           <View style={styles.leftActions}>
             <View style={styles.actionItem}>
               <MaterialCommunityIcons name="heart" size={24} color="#FF6347" />
-              <Text style={styles.actionText}>3.4k</Text>
+              <Text style={styles.actionText}>{likes_count}</Text>
             </View>
             <View style={styles.actionItem}>
               <MaterialCommunityIcons name="comment" size={24} color="#888" />
-              <Text style={styles.actionText}>142</Text>
+              <Text style={styles.actionText}>{comments_count}</Text>
             </View>
             <TouchableOpacity>
               <MaterialCommunityIcons name="bookmark" size={24} color="#888" />
@@ -81,9 +77,7 @@ const Picture = ({
 
         {/* Hashtags */}
         <Text style={styles.hashtags}>
-          <Text style={styles.hashtag}>Porsche 911 GT3 RS </Text>
-          <Text style={styles.hashtag}>🤩 #Supercar #Monaco</Text>
-          <Text style={styles.hashtag}> #Porsche</Text>
+          <Text style={styles.hashtag}>{description}</Text>
         </Text>
       </Pressable>
     </View>

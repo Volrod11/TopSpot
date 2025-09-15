@@ -6,23 +6,38 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeScreenStackParamList } from '../../../types';
 
 type GarageProps = {
-    user_id?: string | null;
-    show_my_garage?: boolean | null;
-    garage_type?: string |null;
-    is_finished?: boolean | null;
-    sort_by?: string | null;
-    query?: string | null;
+    garage: Garage_with_pictures
+};
+
+type Picture = {
+    id: string | null;
+    url: string | null;
+    car_type: string;
+};
+
+type Garage_with_pictures = {
+    garage_id: string;
+    username: string;
+    avatar_url: string | null;
+    nb_categories: number;
+    total_likes: number;
+    total_comments: number;
+    total_pictures: number;
+    total_views: number;
+    created_at: string;
+    rang: number;
+    top_pictures_by_category: Picture[];
 };
 
 const PictureCard = ({
     avatarUrl,
     username,
     location,
-    isTopSpot,
+    rang,
     images,
     likes,
     comments,
-    isComplete,
+    nbCategories,
 }) => (
     <View style={styles.card}>
         {/* Header */}
@@ -34,17 +49,21 @@ const PictureCard = ({
                     <Text style={styles.location}>{location}</Text>
                 </View>
             </View>
-            {isTopSpot && (
+            {rang <= 10 && (
                 <View style={styles.rankBadge}>
-                    <Text style={styles.rankText}>#1</Text>
+                    <Text style={styles.rankText}>#{rang}</Text>
                 </View>
             )}
         </View>
 
         {/* Images Grid */}
         <View style={styles.imageGrid}>
-            {images.map((url, index) => (
-                <Image key={index} source={url} style={styles.image} />
+            {images.map((_pic, index) => (
+                <Image key={index} source={
+                    _pic.id === null
+                        ? require('../../../assets/no_picture.png')
+                        : { uri: _pic.url }
+                } style={styles.image} />
             ))}
         </View>
 
@@ -56,48 +75,29 @@ const PictureCard = ({
                 <Ionicons name="chatbubble" size={16} color="#3498DB" style={{ marginLeft: 12 }} />
                 <Text style={styles.statText}>{comments}</Text>
             </View>
-            {isComplete && <Text style={styles.complete}>Complet ✔</Text>}
+            {nbCategories === 4 && <Text style={styles.complete}>Complet ✔</Text>}
         </View>
     </View>
 );
 
 
 const Garage = ({
-    user_id = null,
-    show_my_garage = null,
-    garage_type = null,
-    is_finished = null,
-    sort_by = null,
-    query = null,
+    garage
 }: GarageProps) => {
     const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
     return (
         <View style={styles.container}>
-            <Pressable onPress={() =>
-                navigation.navigate('GaragesPage', {
-                    user_id: user_id,
-                    show_my_garage: show_my_garage,
-                    garage_type: garage_type,
-                    is_finished: is_finished,
-                    sort_by: sort_by,
-                    query: query,
-                })
-            }>
+            <Pressable >
                 <PictureCard
                     avatarUrl="https://i.pravatar.cc/100?img=8"
-                    username="Alex_SuperCars"
+                    username={garage.username}
                     location="Paris, France"
-                    isTopSpot={true}
-                    isComplete={true}
-                    likes={1200}
-                    comments={87}
-                    images={[
-                        require('../../../assets/images/sto.jpeg'),
-                        require('../../../assets/images/chiron.jpeg'),
-                        require('../../../assets/images/911dakar.jpeg'),
-                        require('../../../assets/images/mustang.jpeg'),
-                    ]}
+                    rang={garage.rang}
+                    nbCategories={garage.nb_categories}
+                    likes={garage.total_likes}
+                    comments={garage.total_comments}
+                    images={garage.top_pictures_by_category}
                 />
             </Pressable>
         </View>
@@ -105,7 +105,7 @@ const Garage = ({
 }
 
 const styles = StyleSheet.create({
-    container : {
+    container: {
         flex: 1,
     },
     card: {
