@@ -28,6 +28,7 @@ import LoadingSpinner from "../HomeComponent/components/LoadingSpinner";
 import Garage from "../HomeComponent/components/Garage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { log } from "console";
+import DiscoveryGrid from "../HomeComponent/components/DIscoveryGrid";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -44,6 +45,7 @@ type HeaderProps = {
 type Filters = {
     sortBy?: string;
     brand?: string;
+    category?: string,
     period?: string;
     query?: string;
 };
@@ -65,6 +67,19 @@ type Pictures_with_infos = {
     likes_count: number;
     comments_count: number;
     relevance_score: number;
+    car_id: string,
+    car_marque: string,
+    car_modele: string,
+    car_variante: string,
+    car_annee: number,
+    car_motorisation: string,
+    car_cehvaux: number,
+    car_couple: number,
+    car_poids: number,
+    car_acceleration_0_100: number,
+    car_vmax: number,
+    car_nb_cylindre: number,
+    car_structure_moteur: string
 }
 
 type Picture = {
@@ -85,6 +100,18 @@ type Garage_with_pictures = {
     created_at: string;
     rang: number;
     top_pictures_by_category: Picture[];
+};
+
+
+type TopPictures = {
+    section_id: string,
+    title: string,
+    type: string,
+    filters: Filters,
+    picture_id: string,
+    picture_url: string,
+    car_id: string,
+    likes: number
 };
 
 type FeedItem =
@@ -133,6 +160,18 @@ const fetchHomePageGarages = async (limit: number, offset: number) => {
     }
 
     return data as Garage_with_pictures[];
+}
+
+
+const fetchTopPictures = async () => {
+    const {data, error} = await supabase.rpc('get_random_top_homepage');
+
+    if (error) {
+        console.log("Error fetching top pictures", error);
+    }
+
+
+    return data as TopPictures[];
 }
 
 const Header = ({ openSearch }: HeaderProps) => {
@@ -207,7 +246,7 @@ export default function HomeScreen() {
     const [hasMorePicture, setHasMorePicture] = useState(true);
     const [hasMoreGarage, setHasMoreGarage] = useState(true);
     const [items, setItems] = useState<FeedItem[]>([]);
-    const [test, setTest] = useState(0);
+    const [topsPictures, setTopsPictures] = useState<TopPictures[]>([]);
 
     const limit = 10;
     const addedPictureIds = useRef<Set<string>>(new Set());
@@ -278,6 +317,15 @@ export default function HomeScreen() {
 
 
     useEffect(() => {
+        const fetchTopPictureFromDatabase = async () => {
+            const loadedTopPictures = await fetchTopPictures();
+            setTopsPictures(loadedTopPictures);
+        };
+
+        fetchTopPictureFromDatabase();
+    }, []);
+
+    useEffect(() => {
         setPictures([]);
         setGarages([]);
         loadPicturesAndGarages();
@@ -324,14 +372,7 @@ export default function HomeScreen() {
                         return (
                             <CardSection>
                                 <Picture
-                                    picture_id = {item.data.picture_id}
-                                    description = {item.data.description}
-                                    picture_url = {item.data.picture_url}
-                                    user_id = {item.data.user_id}
-                                    username = {item.data.username}
-                                    avatar_url = {item.data.avatar_url}
-                                    likes_count = {item.data.likes_count}
-                                    comments_count = {item.data.comments_count}
+                                    pictureWithInfos={item.data}
                                 />
                             </CardSection>
                         );
@@ -349,6 +390,7 @@ export default function HomeScreen() {
                     <>
                         <Header openSearch={openSearch} />
 
+                        <DiscoveryGrid topsPictures={topsPictures}/>
 
                         <MultipleCardSection
                             title="Spots récents"

@@ -7,27 +7,38 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 
-type PicturesPageProps = {
-  picture_id: string;
-  description: string | null;
-  picture_url: string;
-  user_id: string;
-  username: string;
-  avatar_url: string | null;
-  likes_count: number;
-  comments_count: number;
+type PicturePageProps = {
+  pictureWithInfos : Pictures_with_infos;
+}
+
+type Pictures_with_infos = {
+    picture_id: string;
+    description: string | null;
+    picture_url: string;
+    user_id: string;
+    username: string;
+    avatar_url: string | null;
+    likes_count: number;
+    comments_count: number;
+    relevance_score: number;
+    car_id: string,
+    car_marque: string,
+    car_modele: string,
+    car_variante: string,
+    car_annee: number,
+    car_motorisation: string,
+    car_cehvaux: number,
+    car_couple: number,
+    car_poids: number,
+    car_acceleration_0_100: number,
+    car_vmax: number,
+    car_nb_cylindre: number,
+    car_structure_moteur: string
 }
 
 const Picture = ({
-  picture_id,
-  description,
-  picture_url,
-  user_id,
-  username,
-  avatar_url,
-  likes_count,
-  comments_count
-}: PicturesPageProps) => {
+  pictureWithInfos
+}: PicturePageProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
 
@@ -41,7 +52,7 @@ const Picture = ({
             style={styles.avatar}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.username}>{username}</Text>
+            <Text style={styles.username}>{pictureWithInfos.username}</Text>
             <Text style={styles.location}>Monaco</Text>
           </View>
           <TouchableOpacity style={styles.moreIcon}>
@@ -51,7 +62,7 @@ const Picture = ({
 
         {/* Post Image */}
         <Image
-          source={typeof picture_url === 'string' ? { uri: picture_url } : picture_url} // Replace with the actual image URI from the post
+          source={typeof pictureWithInfos.picture_url === 'string' ? { uri: pictureWithInfos.picture_url } : pictureWithInfos.picture_url} // Replace with the actual image URI from the post
           style={styles.postImage}
         />
 
@@ -60,11 +71,11 @@ const Picture = ({
           <View style={styles.leftActions}>
             <View style={styles.actionItem}>
               <MaterialCommunityIcons name="heart" size={24} color="#FF6347" />
-              <Text style={styles.actionText}>{likes_count}</Text>
+              <Text style={styles.actionText}>{pictureWithInfos.likes_count}</Text>
             </View>
             <View style={styles.actionItem}>
               <MaterialCommunityIcons name="comment" size={24} color="#888" />
-              <Text style={styles.actionText}>{comments_count}</Text>
+              <Text style={styles.actionText}>{pictureWithInfos.comments_count}</Text>
             </View>
             <TouchableOpacity>
               <MaterialCommunityIcons name="bookmark" size={24} color="#888" />
@@ -77,8 +88,9 @@ const Picture = ({
 
         {/* Hashtags */}
         <Text style={styles.hashtags}>
-          <Text style={styles.hashtag}>{description}</Text>
+          <Text style={styles.car_name}>{pictureWithInfos.car_marque} {pictureWithInfos.car_modele} {pictureWithInfos.car_motorisation}</Text>
         </Text>
+        <Text >{pictureWithInfos.description}</Text>
       </Pressable>
     </View>
   );
@@ -152,7 +164,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     fontSize: 14,
   },
-  hashtag: {
+  car_name: {
     fontWeight: 'bold',
   },
 });
