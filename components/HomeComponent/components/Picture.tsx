@@ -1,46 +1,132 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // You'll need to install @expo/vector-icons if you don't have it
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { HomeScreenStackParamList } from '../../../types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { supabase } from '../../../lib/supabase';
+import CommentsModal from '../../GeneralComponent/CommentsModal';
 
 
 type PicturePageProps = {
-  pictureWithInfos : Pictures_with_infos;
+  pictureWithInfos: Pictures_with_infos;
 }
 
 type Pictures_with_infos = {
-    picture_id: string;
-    description: string | null;
-    picture_url: string;
-    user_id: string;
-    username: string;
-    avatar_url: string | null;
-    likes_count: number;
-    comments_count: number;
-    relevance_score: number;
-    car_id: string,
-    car_marque: string,
-    car_modele: string,
-    car_variante: string,
-    car_annee: number,
-    car_motorisation: string,
-    car_cehvaux: number,
-    car_couple: number,
-    car_poids: number,
-    car_acceleration_0_100: number,
-    car_vmax: number,
-    car_nb_cylindre: number,
-    car_structure_moteur: string
+  picture_id: string;
+  description: string | null;
+  picture_url: string;
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  likes_count: number;
+  comments_count: number;
+  relevance_score: number;
+  is_liked: boolean;
+  car_id: string,
+  car_marque: string,
+  car_modele: string,
+  car_variante: string,
+  car_annee: number,
+  car_motorisation: string,
+  car_cehvaux: number,
+  car_couple: number,
+  car_poids: number,
+  car_acceleration_0_100: number,
+  car_vmax: number,
+  car_nb_cylindre: number,
+  car_structure_moteur: string
 }
+
+
+
+
+//BDD
+const likePicture = async (picture_id: string) => {
+  const { data, error } = await supabase.rpc('like_picture', {
+    p_picture_id: picture_id,
+  })
+
+  if (error) {
+    console.error('Erreur like_picture:', error)
+    return null
+  }
+
+  return { data, error };
+}
+
+
+const unlikePicture = async (picture_id: string) => {
+  const { data, error } = await supabase.rpc('unlike_picture', {
+    p_picture_id: picture_id,
+  })
+
+  if (error) {
+    console.error('Erreur unlike_picture:', error)
+    return null
+  }
+
+  return { data, error };
+}
+
+
+
 
 const Picture = ({
   pictureWithInfos
 }: PicturePageProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
+  const [isLiked, setIsLiked] = useState(pictureWithInfos.is_liked);
+  const [likeCount, setLikeCount] = useState(pictureWithInfos.likes_count);
+  const [visible, setVisible] = useState(false);
+
+
+  const comments = [
+    {
+      id: "1",
+      user: "Jean Dupont",
+      text: "Super article !",
+      likes: 12,
+      timeAgo: "il y a 2h",
+      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    },
+    {
+      id: "2",
+      user: "Marie Claire",
+      text: "Merci pour le partage 🙏",
+      likes: 8,
+      timeAgo: "il y a 5h",
+      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    },
+    {
+      id: "3",
+      user: "Alex Martin",
+      text: "J’adore ce contenu 😍",
+      likes: 25,
+      timeAgo: "hier",
+      avatar: "https://randomuser.me/api/portraits/men/12.jpg",
+    },
+  ];
+
+
+  const handleLike = async () => {
+    const { error } = await likePicture(pictureWithInfos.picture_id);
+    if (!error) {
+      setIsLiked(true);
+      setLikeCount(prev => prev + 1);
+    }
+  };
+
+  const handleUnlike = async () => {
+    const { error } = await unlikePicture(pictureWithInfos.picture_id);
+    if (!error) {
+      setIsLiked(false);
+      setLikeCount(prev => prev - 1);
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -70,15 +156,25 @@ const Picture = ({
         <View style={styles.actions}>
           <View style={styles.leftActions}>
             <View style={styles.actionItem}>
-              <MaterialCommunityIcons name="heart" size={24} color="#FF6347" />
-              <Text style={styles.actionText}>{pictureWithInfos.likes_count}</Text>
+
+              {isLiked ?
+                <Pressable onPress={handleUnlike}>
+                  <Ionicons name="heart" size={24} color="#FF6347" />
+                </Pressable>
+                :
+                <Pressable onPress={handleLike}>
+                  <Ionicons name="heart-outline" size={24} color="black" />
+                </Pressable>}
+              <Text style={styles.actionText}>{likeCount}</Text>
             </View>
             <View style={styles.actionItem}>
-              <MaterialCommunityIcons name="comment" size={24} color="#888" />
+              <Pressable onPress={() => setVisible(true)}>
+                <Ionicons name="chatbubble-outline" size={24} color="black" />
+              </Pressable>
               <Text style={styles.actionText}>{pictureWithInfos.comments_count}</Text>
             </View>
             <TouchableOpacity>
-              <MaterialCommunityIcons name="bookmark" size={24} color="#888" />
+              <Ionicons name="bookmark-outline" size={24} color="black" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity>
@@ -92,7 +188,20 @@ const Picture = ({
         </Text>
         <Text >{pictureWithInfos.description}</Text>
       </Pressable>
+
+
+
+      {/* Modal séparé */}
+      <CommentsModal
+        visible={visible}
+        onClose={() => setVisible(false)}
+        comments={comments}
+      />
     </View>
+
+
+
+
   );
 };
 

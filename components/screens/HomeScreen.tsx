@@ -29,6 +29,7 @@ import Garage from "../HomeComponent/components/Garage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { log } from "console";
 import DiscoveryGrid from "../HomeComponent/components/DIscoveryGrid";
+import SuggestedProfiles from "../HomeComponent/components/SuggestedProfiles";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -67,6 +68,7 @@ type Pictures_with_infos = {
     likes_count: number;
     comments_count: number;
     relevance_score: number;
+    is_liked: boolean;
     car_id: string,
     car_marque: string,
     car_modele: string,
@@ -112,6 +114,12 @@ type TopPictures = {
     picture_url: string,
     car_id: string,
     likes: number
+};
+
+type Profiles = {
+    profiles_id : string,
+    username: string,
+    avatar_url: string
 };
 
 type FeedItem =
@@ -167,11 +175,21 @@ const fetchTopPictures = async () => {
     const {data, error} = await supabase.rpc('get_random_top_homepage');
 
     if (error) {
-        console.log("Error fetching top pictures", error);
+        console.error("Error fetching top pictures", error);
     }
 
-
     return data as TopPictures[];
+}
+
+
+const fetchSuggestedProfiles = async() => {
+    const {data, error} = await supabase.rpc("get_suggested_profiles", { p_limit : 5 });
+
+    if (error) {
+        console.error("Error fetching suggested profiles", error);
+    }
+
+    return data as Profiles[];
 }
 
 const Header = ({ openSearch }: HeaderProps) => {
@@ -247,6 +265,7 @@ export default function HomeScreen() {
     const [hasMoreGarage, setHasMoreGarage] = useState(true);
     const [items, setItems] = useState<FeedItem[]>([]);
     const [topsPictures, setTopsPictures] = useState<TopPictures[]>([]);
+    const [suggestedProfiles, setSuggestedProfiles] = useState<Profiles[]>([]);
 
     const limit = 10;
     const addedPictureIds = useRef<Set<string>>(new Set());
@@ -326,10 +345,21 @@ export default function HomeScreen() {
     }, []);
 
     useEffect(() => {
+        const fetchSuggestedProfilesFromDatabase = async () => {
+            const loadedSuggestedProfiles = await fetchSuggestedProfiles();
+            setSuggestedProfiles(loadedSuggestedProfiles);
+        };
+
+        fetchSuggestedProfilesFromDatabase();
+    }, []);
+
+    useEffect(() => {
         setPictures([]);
         setGarages([]);
         loadPicturesAndGarages();
     }, []);
+
+    
 
 
 
@@ -391,6 +421,8 @@ export default function HomeScreen() {
                         <Header openSearch={openSearch} />
 
                         <DiscoveryGrid topsPictures={topsPictures}/>
+
+                        {suggestedProfiles.length >= 5 && <SuggestedProfiles/>}
 
                         <MultipleCardSection
                             title="Spots récents"
