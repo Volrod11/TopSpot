@@ -16,7 +16,53 @@ type User = {
   };
 };
 
-const events = [
+type Categorie = {
+  id: string,
+  color: string,
+  car_type: string
+};
+
+type Tag = {
+  id: string,
+  name: string,
+  type: string,
+  color: string
+};
+
+type Event = {
+  event_id: string,
+  occurence_id: string | null,
+  name: string,
+  description: string,
+  image_url: string,
+  street: string,
+  city: string,
+  postal_code: string,
+  country: string,
+  lagitude: number,
+  longitude: number,
+  start_time: string,
+  end_time: string,
+  nb_participants: number,
+  categories: Categorie[],
+  tags: Tag[]
+};
+
+const fetchEvents = async (query: string, sort_by: string, tagcat: string) => {
+  const { data, error } = await supabase.rpc("get_events_with_details", {
+    p_query: query,
+    p_sort_by: sort_by,
+    p_tagcat: tagcat
+  });
+
+  if (error) {
+    console.error("Error fetching event", error);
+  };
+
+  return data as Event[];
+}
+
+const eventsss = [
   {
     id: "1",
     date: { day: "15", month: "MAR" },
@@ -63,6 +109,17 @@ const events = [
 ];
 
 export default function HomeScreen() {
+  const [events, setEvents] = useState<Event[]>([]);
+
+  useEffect(() => {
+    const fetchEventsFromDataBase = async () => {
+      const loadedEvents = await fetchEvents(null, null, null);
+      setEvents(loadedEvents);
+    };
+
+    fetchEventsFromDataBase();
+  }, [])
+
   return (
     <View style={styles.container}>
       <EventsHeader
@@ -72,8 +129,17 @@ export default function HomeScreen() {
       />
       <FlatList
         data={events}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <EventCard {...item} />}
+        keyExtractor={(item) => item.event_id+"."+item.occurence_id}
+        renderItem={({ item }) => <EventCard
+          start_time={item.start_time}
+          end_time={item.end_time}
+          title={item.name}
+          location={item.street + " - " + item.city}
+          participants={item.nb_participants}
+          image_url={item.image_url}
+          tags={item.tags}
+          cats={item.categories}
+        />}
         contentContainerStyle={{ padding: 12 }}
       />
     </View>

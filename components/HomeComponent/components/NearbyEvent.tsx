@@ -1,40 +1,91 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { supabase } from '../../../lib/supabase';
+import EventCard from '../../MapComponent/EventCard';
 
-const NearbyEvent = ({ 
+type Categorie = {
+  id: string,
+  color: string,
+  car_type: string
+};
+
+type Tag = {
+  id: string,
+  name: string,
+  type: string,
+  color: string
+};
+
+type Event = {
+  event_id: string,
+  occurence_id: string | null,
+  name: string,
+  description: string,
+  image_url: string,
+  street: string,
+  city: string,
+  postal_code: string,
+  country: string,
+  lagitude: number,
+  longitude: number,
+  start_time: string,
+  end_time: string,
+  nb_participants: number,
+  categories: Categorie[],
+  tags: Tag[]
+};
+
+const fetchEvents = async () => {
+  const { data, error } = await supabase.rpc("get_events_with_details", {
+    p_query: null,
+    p_sort_by: null,
+    p_tagcat: null,
+    p_limit: 2
+  });
+
+  if (error) {
+    console.error("Error fetching event", error);
+  };
+
+  return data as Event[];
+}
+
+const NearbyEvent = ({
   name = "Cars & Coffee Paris",
   schedule = "Dimanche 24 Juin • 9h00",
   distance = "2.3 km",
   rating = "4.6",
   onViewOnMap = () => console.log('Voir sur la carte pressed')
 }) => {
+
+  const [events, setEvents] = useState<Event[]>([]);
+
+  useEffect(() => {
+    const fetchEventsFromDataBase = async () => {
+      const loadedEvents = await fetchEvents();
+      setEvents(loadedEvents);
+    };
+
+    fetchEventsFromDataBase();
+  }, [])
   return (
     <View style={styles.container}>
       {/* Header avec icône et infos */}
-      <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <View style={styles.icon}>
-            <Text style={styles.iconText}>🚗</Text>
-          </View>
-        </View>
-        
-        <View style={styles.infoContainer}>
-          <Text style={styles.title}>{name}</Text>
-          <Text style={styles.schedule}>{schedule}</Text>
-        </View>
-        
-        <View style={styles.metaContainer}>
-          <Text style={styles.distance}>{distance}</Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.rating}>⭐ {rating}</Text>
-          </View>
-        </View>
-      </View>
-      
-      {/* Bouton "Voir sur la carte" */}
-      <TouchableOpacity style={styles.mapButton} onPress={onViewOnMap}>
-        <Text style={styles.mapButtonText}>Voir sur la carte</Text>
-      </TouchableOpacity>
+      <FlatList
+        data={events}
+        keyExtractor={(item) => item.event_id + "." + item.occurence_id}
+        renderItem={({ item }) => <EventCard
+          start_time={item.start_time}
+          end_time={item.end_time}
+          title={item.name}
+          location={item.street + " - " + item.city}
+          participants={item.nb_participants}
+          image_url={item.image_url}
+          tags={item.tags}
+          cats={item.categories}
+        />}
+        contentContainerStyle={{ padding: 12 }}
+      />
     </View>
   );
 };

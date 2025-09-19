@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   View,
@@ -7,18 +7,110 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
 } from "react-native";
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { supabase } from "../../lib/supabase";
+import { useUser } from "../../context/UserContext";
 
-export default function CommentsModal({ visible, onClose, comments }) {
+type CommentsModalProps = {
+  visible: boolean,
+  onClose: () => void,
+  picture_id: string
+  onCommentsChange?: (count: number) => void;
+};
+
+type Comment = {
+  comment_id: string,
+  user_id: string,
+  username: string,
+  avatar_url: string,
+  comment: string,
+  created_at: string
+};
+
+const fetchPictureComments = async (picture_id: string) => {
+  const { data, error } = await supabase.rpc("get_picture_comments", { p_picture_id: picture_id });
+
+  if (error) {
+    console.error("Error fetching picture comments", error);
+  }
+
+  return data as Comment[];
+};
+
+
+const insertPictureComment = async (picture_id: string, comment: string) => {
+  const { data, error } = await supabase.rpc("insert_comment_in_picture", {
+    p_picture_id: picture_id,
+    p_comment: comment
+  });
+
+  if (error) {
+    console.error("Error adding comment", error);
+  }
+
+  return { data, error };
+};
+
+
+export default function CommentsModal({ visible, onClose, picture_id, onCommentsChange }: CommentsModalProps) {
+  const { currentUserId, username, avatarUrl } = useUser();
+
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [nbNewComment, setNbNewComment] = useState(0);
+
+
+  useEffect(() => {
+    const fetchPictureCommentsFromDatabase = async () => {
+      const loadedComments = await fetchPictureComments(picture_id);
+      setComments(loadedComments);
+    };
+
+    fetchPictureCommentsFromDatabase();
+  }, [picture_id]);
+
+  useEffect(() => {
+    // Notifie le parent du nombre actuel de commentaires
+    onCommentsChange?.(comments.length);
+  }, [comments]);
+
+  const handleSendComment = async () => {
+    if (!newComment.trim()) return;
+    setLoading(true);
+
+    const { error } = await insertPictureComment(picture_id, newComment);
+    if (!error) {
+      const tempComment: Comment = {
+        comment_id: Math.random().toString(),
+        user_id: currentUserId,
+        username: username,
+        avatar_url: avatarUrl,
+        comment: newComment,
+        created_at: new Date().toISOString(),
+      };
+
+      setComments(prev => {
+        const updated = [tempComment, ...prev]
+        onCommentsChange?.(updated.length);
+        return updated;
+      });
+      setNewComment("");
+    }
+
+    setLoading(false);
+  };
+
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
+    <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>
@@ -28,37 +120,48 @@ export default function CommentsModal({ visible, onClose, comments }) {
             </TouchableOpacity>
           </View>
 
-          {/* Liste des commentaires */}
-          <FlatList
-            data={comments}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.commentRow}>
-                {/* Avatar */}
-                <Image source={{ uri: item.avatar }} style={styles.avatar} />
-
-                {/* Bloc texte */}
-                <View style={styles.commentContent}>
-                  {/* Nom utilisateur */}
-                  <Text style={styles.userName}>{item.user}</Text>
-
-                  {/* Texte du commentaire */}
-                  <Text style={styles.commentText}>{item.text}</Text>
-
-                  {/* Infos meta */}
-                  <View style={styles.commentMeta}>
-                    <Text style={styles.time}>{item.timeAgo}</Text>
-                    <View style={styles.likesContainer}>
+          {/* Contenu */}
+          {comments.length > 0 ? (
+            <FlatList
+              data={comments}
+              keyExtractor={(item) => item.comment_id}
+              renderItem={({ item }) => (
+                <View style={styles.commentRow}>
+                  <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+                  <View style={styles.commentContent}>
+                    <Text style={styles.userName}>{item.username}</Text>
+                    <Text style={styles.commentText}>{item.comment}</Text>
+                    <View style={styles.commentMeta}>
+                      <Text style={styles.time}>{new Date(item.created_at).toLocaleString()}</Text>
                       <Ionicons name="heart" size={14} color="red" />
-                      <Text style={styles.likes}>{item.likes}</Text>
                     </View>
                   </View>
                 </View>
-              </View>
-            )}
-          />
+              )}
+            />
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Soyez le premier à commenter !</Text>
+            </View>
+          )}
+
+          {/* Input en bas */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={newComment}
+              onChangeText={setNewComment}
+              placeholder="Ajouter un commentaire..."
+              returnKeyType="send"
+              onSubmitEditing={handleSendComment}
+              editable={!loading}
+            />
+            <TouchableOpacity onPress={handleSendComment} disabled={loading}>
+              <Ionicons name="send" size={22} color="#007AFF" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -71,10 +174,11 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "white",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    height: "66%", // 2/3 de l’écran
+    height: "66%",
   },
   header: {
     flexDirection: "row",
@@ -83,52 +187,69 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "bold"
   },
   closeText: {
     color: "#007AFF",
-    fontWeight: "600",
+    fontWeight: "600"
   },
   commentRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 15,
+    marginBottom: 15
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 10,
+    marginRight: 10
   },
   commentContent: {
-    flex: 1,
+    flex: 1
   },
   userName: {
     fontSize: 14,
     fontWeight: "bold",
-    marginBottom: 2,
+    marginBottom: 2
   },
   commentText: {
     fontSize: 15,
-    marginBottom: 5,
+    marginBottom: 5
   },
   commentMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "center"
   },
   time: {
     fontSize: 12,
-    color: "gray",
+    color: "gray"
   },
-  likesContainer: {
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "gray",
+    fontStyle: "italic"
+  },
+  inputContainer: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    marginBottom: "5%"
   },
-  likes: {
-    fontSize: 12,
-    color: "red",
-    fontWeight: "600",
-    marginLeft: 4,
+  input: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginRight: 8
   },
 });

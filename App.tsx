@@ -21,7 +21,7 @@ export default function App() {
 
 function InnerApp() {
   const [session, setSession] = useState<Session | null>(null)
-  const { setCurrentUserId } = useUser()
+  const { setCurrentUserId, setUsername, setAvatarUrl } = useUser()
 
   useEffect(() => {
     // --- Auth session ---
@@ -59,8 +59,33 @@ function InnerApp() {
 
   // Met à jour le currentUserId dans le contexte
   useEffect(() => {
-    setCurrentUserId(session?.user?.id ?? null)
-  }, [session])
+    const userId = session?.user?.id ?? null;
+    setCurrentUserId(userId);
+
+    // 👉 Récupère aussi username & avatar dans la table profiles
+    const fetchProfile = async () => {
+      if (!userId) {
+        setUsername(null);
+        setAvatarUrl(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles") // ta table profil
+        .select("username, avatar_url")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("Impossible de récupérer le profil :", error);
+      } else if (data) {
+        setUsername(data.username);
+        setAvatarUrl(data.avatar_url);
+      }
+    };
+
+    fetchProfile();
+  }, [session]);
 
   return (
     <View style={styles.container}>

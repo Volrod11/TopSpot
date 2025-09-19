@@ -30,6 +30,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { log } from "console";
 import DiscoveryGrid from "../HomeComponent/components/DIscoveryGrid";
 import SuggestedProfiles from "../HomeComponent/components/SuggestedProfiles";
+import NearbyEvent from "../HomeComponent/components/NearbyEvent";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -394,6 +395,7 @@ export default function HomeScreen() {
                 keyExtractor={(item) =>
                     item.type === 'picture' ? `pic-${item.data.picture_id}` : `garage-${item.data.garage_id}`
                 }
+                showsHorizontalScrollIndicator={false}
                 onEndReached={loadPicturesAndGarages}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={loading ? <LoadingSpinner /> : null}
@@ -421,6 +423,7 @@ export default function HomeScreen() {
                         <Header openSearch={openSearch} />
 
                         <DiscoveryGrid topsPictures={topsPictures}/>
+                 
 
                         {suggestedProfiles.length >= 5 && <SuggestedProfiles/>}
 

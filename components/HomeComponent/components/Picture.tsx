@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { HomeScreenStackParamList } from '../../../types';
@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../../../lib/supabase';
 import CommentsModal from '../../GeneralComponent/CommentsModal';
+import DoubleTapLike from '../../GeneralComponent/DoubleTapLike';
 
 
 type PicturePageProps = {
@@ -78,10 +79,14 @@ const Picture = ({
   pictureWithInfos
 }: PicturePageProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
+  const lastTap = useRef<number | null>(null);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
 
   const [isLiked, setIsLiked] = useState(pictureWithInfos.is_liked);
   const [likeCount, setLikeCount] = useState(pictureWithInfos.likes_count);
   const [visible, setVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(0);
 
 
   const comments = [
@@ -112,20 +117,59 @@ const Picture = ({
   ];
 
 
+  useEffect(() => {
+    setCommentsCount(pictureWithInfos.comments_count);
+  }, [pictureWithInfos.comments_count])
+
+
   const handleLike = async () => {
-    const { error } = await likePicture(pictureWithInfos.picture_id);
-    if (!error) {
-      setIsLiked(true);
-      setLikeCount(prev => prev + 1);
+    if (!isLoading) {
+      setIsLoading(true);
+
+      const { error } = await likePicture(pictureWithInfos.picture_id);
+      if (!error) {
+        setIsLiked(true);
+        setLikeCount(prev => prev + 1);
+      }
     }
+
+    setIsLoading(false);
   };
 
   const handleUnlike = async () => {
-    const { error } = await unlikePicture(pictureWithInfos.picture_id);
-    if (!error) {
-      setIsLiked(false);
-      setLikeCount(prev => prev - 1);
+    if (!isLoading) {
+      setIsLoading(true);
+
+      const { error } = await unlikePicture(pictureWithInfos.picture_id);
+      if (!error) {
+        setIsLiked(false);
+        setLikeCount(prev => prev - 1);
+      }
     }
+
+    setIsLoading(false);
+  };
+
+  const handleDoubleTap = async () => {
+    if (!isLiked) {
+      handleLike();
+      animateHeart();
+    }
+  };
+
+  const animateHeart = () => {
+    scaleAnim.setValue(0);
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 4,
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.timing(scaleAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    });
   };
 
   return (
@@ -133,10 +177,14 @@ const Picture = ({
       <Pressable>
         {/* Header */}
         <View style={styles.header}>
+
           <Image
-            source={{ uri: 'https://i.pravatar.cc/100?img=6' }} // Replace with actual avatar URI
+            source={{ uri: 'https://i.pravatar.cc/100?img=6' }}
             style={styles.avatar}
           />
+
+
+
           <View style={styles.userInfo}>
             <Text style={styles.username}>{pictureWithInfos.username}</Text>
             <Text style={styles.location}>Monaco</Text>
@@ -147,10 +195,31 @@ const Picture = ({
         </View>
 
         {/* Post Image */}
-        <Image
-          source={typeof pictureWithInfos.picture_url === 'string' ? { uri: pictureWithInfos.picture_url } : pictureWithInfos.picture_url} // Replace with the actual image URI from the post
-          style={styles.postImage}
-        />
+        <DoubleTapLike onDoubleTap={handleDoubleTap}>
+          <View style={styles.imageHeart}>
+            <Image
+              source={typeof pictureWithInfos.picture_url === 'string' ? { uri: pictureWithInfos.picture_url } : pictureWithInfos.picture_url} // Replace with the actual image URI from the post
+              style={styles.postImage}
+            />
+
+            <Animated.View
+              style={[
+                styles.heartContainer,
+                {
+                  transform: [{ scale: scaleAnim }],
+                  opacity: scaleAnim,
+                },
+              ]}
+            >
+              <Image
+                source={require("../../../assets/heart.png")}
+                style={styles.heart}
+              />
+
+            </Animated.View>
+
+          </View>
+        </DoubleTapLike>
 
         {/* Actions */}
         <View style={styles.actions}>
@@ -159,26 +228,26 @@ const Picture = ({
 
               {isLiked ?
                 <Pressable onPress={handleUnlike}>
-                  <Ionicons name="heart" size={24} color="#FF6347" />
+                  <Ionicons name="heart" size={30} color="#FF6347" />
                 </Pressable>
                 :
                 <Pressable onPress={handleLike}>
-                  <Ionicons name="heart-outline" size={24} color="black" />
+                  <Ionicons name="heart-outline" size={30} color="black" />
                 </Pressable>}
               <Text style={styles.actionText}>{likeCount}</Text>
             </View>
             <View style={styles.actionItem}>
               <Pressable onPress={() => setVisible(true)}>
-                <Ionicons name="chatbubble-outline" size={24} color="black" />
+                <Ionicons name="chatbubble-outline" size={30} color="black" />
               </Pressable>
-              <Text style={styles.actionText}>{pictureWithInfos.comments_count}</Text>
+              <Text style={styles.actionText}>{commentsCount}</Text>
             </View>
             <TouchableOpacity>
-              <Ionicons name="bookmark-outline" size={24} color="black" />
+              <Ionicons name="bookmark-outline" size={30} color="black" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity>
-            <MaterialCommunityIcons name="share-variant" size={24} color="#888" />
+            <MaterialCommunityIcons name="share-variant" size={30} color="#888" />
           </TouchableOpacity>
         </View>
 
@@ -187,17 +256,18 @@ const Picture = ({
           <Text style={styles.car_name}>{pictureWithInfos.car_marque} {pictureWithInfos.car_modele} {pictureWithInfos.car_motorisation}</Text>
         </Text>
         <Text >{pictureWithInfos.description}</Text>
-      </Pressable>
+      </Pressable >
 
 
 
       {/* Modal séparé */}
-      <CommentsModal
+      < CommentsModal
         visible={visible}
         onClose={() => setVisible(false)}
-        comments={comments}
+        picture_id={pictureWithInfos.picture_id}
+        onCommentsChange={(count: number) => setCommentsCount(count)}
       />
-    </View>
+    </View >
 
 
 
@@ -275,6 +345,25 @@ const styles = StyleSheet.create({
   },
   car_name: {
     fontWeight: 'bold',
+  },
+  imageHeart: {
+    position: "relative",
+  },
+  heartContainer: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    width: 100,
+    height: 100,
+    marginLeft: -50,
+    marginTop: -50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  heart: {
+    width: 100,
+    height: 100,
+    tintColor: "white"
   },
 });
 
