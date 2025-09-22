@@ -36,6 +36,12 @@
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
           "recordAudioAndroid": true
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "TopSpot utilise votre position pour afficher les spots proches de vous."
+        }
       ]
     ],
     "experiments": {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, ImageBackground, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import PicturesPage from '../../pages/PicturesPage';
+import PicturesPage from '../../pages/PicturesList';
 
 const PlaceholderImage = require('../../../assets/images/senna.png');
 

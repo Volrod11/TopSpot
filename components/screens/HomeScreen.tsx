@@ -7,6 +7,7 @@ import {
     Pressable,
     Dimensions,
     Animated,
+    ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
@@ -15,10 +16,10 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import MonthlyGarage from "../HomeComponent/components/MonthlyGarage";
 import { Ionicons } from "@expo/vector-icons";
 import CardSection from "../HomeComponent/components/CardSection";
-import LastsSpots from "../HomeComponent/components/LastsSpots";
+import LastsSpots from "../HomeComponent/components/NearbyCars";
 import Picture from "../HomeComponent/components/Picture";
 import { supabase } from "../../lib/supabase";
-import { HomeScreenStackParamList } from "../../types";
+import { CityRegion, HomeScreenStackParamList, NearbyCar, Garage_with_pictures } from "../../types";
 import SearchPage from "../pages/SearchPage";
 import { useRef, useEffect } from "react";
 import MultipleCardSection from "../HomeComponent/MultipleCardSection";
@@ -27,10 +28,12 @@ import { useUser } from "../../context/UserContext";
 import LoadingSpinner from "../HomeComponent/components/LoadingSpinner";
 import Garage from "../HomeComponent/components/Garage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { log } from "console";
-import DiscoveryGrid from "../HomeComponent/components/DIscoveryGrid";
+import DiscoveryGrid from "../HomeComponent/components/DiscoveryGrid";
 import SuggestedProfiles from "../HomeComponent/components/SuggestedProfiles";
 import NearbyEvent from "../HomeComponent/components/NearbyEvent";
+import useUserLocation from "../../utils/useUserLocation";
+import { getCityRegionFromCoords } from "../../utils/getCityRegionFromCoords";
+import NearbyCars from "../HomeComponent/components/NearbyCars";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -85,25 +88,9 @@ type Pictures_with_infos = {
     car_structure_moteur: string
 }
 
-type Picture = {
-    id: string | null;
-    url: string | null;
-    car_type: string;
-};
 
-type Garage_with_pictures = {
-    garage_id: string;
-    username: string;
-    avatar_url: string | null;
-    nb_categories: number;
-    total_likes: number;
-    total_comments: number;
-    total_pictures: number;
-    total_views: number;
-    created_at: string;
-    rang: number;
-    top_pictures_by_category: Picture[];
-};
+
+
 
 
 type TopPictures = {
@@ -118,7 +105,7 @@ type TopPictures = {
 };
 
 type Profiles = {
-    profiles_id : string,
+    profiles_id: string,
     username: string,
     avatar_url: string
 };
@@ -173,18 +160,20 @@ const fetchHomePageGarages = async (limit: number, offset: number) => {
 
 
 const fetchTopPictures = async () => {
-    const {data, error} = await supabase.rpc('get_random_top_homepage');
+    const { data, error } = await supabase.rpc('get_random_top_homepage');
 
     if (error) {
         console.error("Error fetching top pictures", error);
     }
 
+    console.log(data);
+    
     return data as TopPictures[];
 }
 
 
-const fetchSuggestedProfiles = async() => {
-    const {data, error} = await supabase.rpc("get_suggested_profiles", { p_limit : 5 });
+const fetchSuggestedProfiles = async () => {
+    const { data, error } = await supabase.rpc("get_suggested_profiles", { p_limit: 5 });
 
     if (error) {
         console.error("Error fetching suggested profiles", error);
@@ -192,6 +181,20 @@ const fetchSuggestedProfiles = async() => {
 
     return data as Profiles[];
 }
+
+
+const fetchNearbyCars = async (city :string, region: string) => {
+    const  {data, error} = await supabase.rpc("get_top2_pictures_city_or_region", {
+        p_city: city, p_region : region
+    })
+
+    if (error) {
+        console.error("Error fetching top 2 nearby cars");
+    }
+    
+    return data as NearbyCar[];
+}
+
 
 const Header = ({ openSearch }: HeaderProps) => {
     const slideAnim = useRef(new Animated.Value(height)).current;
@@ -255,22 +258,27 @@ export default function HomeScreen() {
 
     const slideAnim = useRef(new Animated.Value(height)).current;
     const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>>();
+    const { location, errorMsg, loading } = useUserLocation(true);
 
+    const [cityRegion, setCityRegion] = useState<CityRegion>(null);
     const [searchVisible, setSearchVisible] = useState(false);
     const [homepageContents, setHomepageContents] = useState<HomepageContent[]>([]);
     const [pictures, setPictures] = useState<Pictures_with_infos[]>([]);
     const [garages, setGarages] = useState<Garage_with_pictures[]>([]);
     const [offset, setOffset] = useState(0);
-    const [loading, setLoading] = useState(false);
+    const [loadingPicturesAndGarages, setLoadingPicturesAndGarages] = useState(false);
     const [hasMorePicture, setHasMorePicture] = useState(true);
     const [hasMoreGarage, setHasMoreGarage] = useState(true);
     const [items, setItems] = useState<FeedItem[]>([]);
     const [topsPictures, setTopsPictures] = useState<TopPictures[]>([]);
     const [suggestedProfiles, setSuggestedProfiles] = useState<Profiles[]>([]);
+    const [nearbyCars, setNearbyCars] = useState<NearbyCar[]>([]);
 
     const limit = 10;
     const addedPictureIds = useRef<Set<string>>(new Set());
     const addedGarageIds = useRef<Set<string>>(new Set());
+
+
 
 
     useEffect(() => {
@@ -284,8 +292,8 @@ export default function HomeScreen() {
 
 
     const loadPicturesAndGarages = useCallback(async () => {
-        if (loading || (!hasMorePicture && !hasMoreGarage)) return;
-        setLoading(true);
+        if (loadingPicturesAndGarages || (!hasMorePicture && !hasMoreGarage)) return;
+        setLoadingPicturesAndGarages(true);
 
 
         let newPictures: Pictures_with_infos[] = [];
@@ -332,8 +340,8 @@ export default function HomeScreen() {
             setHasMoreGarage(false);
         }
 
-        setLoading(false);
-    }, [offset, loading, hasMorePicture, hasMoreGarage]);
+        setLoadingPicturesAndGarages(false);
+    }, [offset, loadingPicturesAndGarages, hasMorePicture, hasMoreGarage]);
 
 
     useEffect(() => {
@@ -354,13 +362,33 @@ export default function HomeScreen() {
         fetchSuggestedProfilesFromDatabase();
     }, []);
 
+
+
     useEffect(() => {
         setPictures([]);
         setGarages([]);
         loadPicturesAndGarages();
     }, []);
 
-    
+    useEffect(() => {
+        async function fetchCityRegion() {
+            const info = await getCityRegionFromCoords(location.longitude, location.latitude);
+            setCityRegion(info);
+        }
+
+        fetchCityRegion();
+    }, [location]);
+
+    useEffect(() => {
+        async function fetchNearbyCarsFromDatabase() {
+            const loadedNearbyCars = await fetchNearbyCars(cityRegion.city, cityRegion.region);
+            setNearbyCars(loadedNearbyCars);
+        };
+
+        fetchNearbyCarsFromDatabase();
+    }, [cityRegion]);
+
+
 
 
 
@@ -386,6 +414,11 @@ export default function HomeScreen() {
 
 
 
+    if (loading) return <ActivityIndicator size="large" color="blue" />;
+
+    if (errorMsg) return <Text>Erreur : {errorMsg}</Text>;
+
+
 
     return (
         <View style={styles.homePage}>
@@ -398,7 +431,7 @@ export default function HomeScreen() {
                 showsHorizontalScrollIndicator={false}
                 onEndReached={loadPicturesAndGarages}
                 onEndReachedThreshold={0.5}
-                ListFooterComponent={loading ? <LoadingSpinner /> : null}
+                ListFooterComponent={loadingPicturesAndGarages ? <LoadingSpinner /> : null}
                 renderItem={({ item }) => {
                     if (item.type === 'picture') {
                         return (
@@ -411,7 +444,7 @@ export default function HomeScreen() {
                     } else {
                         return (
                             <CardSection title="Garage">
-                                <Garage 
+                                <Garage
                                     garage={item.data}
                                 />
                             </CardSection>
@@ -422,16 +455,18 @@ export default function HomeScreen() {
                     <>
                         <Header openSearch={openSearch} />
 
-                        <DiscoveryGrid topsPictures={topsPictures}/>
-                 
+                        
 
-                        {suggestedProfiles.length >= 5 && <SuggestedProfiles/>}
+                        <DiscoveryGrid topsPictures={topsPictures} />
 
-                        <MultipleCardSection
-                            title="Spots récents"
-                        >
-                            <LastsSpots />
+                        {suggestedProfiles.length >= 5 && <SuggestedProfiles />}
+
+
+                        <MultipleCardSection title={"Spots proches de toi"}>
+                            {nearbyCars.length === 2 && <NearbyCars nearbyCar1={nearbyCars[0]} nearbyCar2={nearbyCars[1]} cityRegion={cityRegion}/>}
                         </MultipleCardSection>
+
+                        
 
                     </>
                 }

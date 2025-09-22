@@ -4,8 +4,6 @@ import { ProfileScreenStackParamList } from "../../types";
 
 import ProfileScreen from "../screens/ProfileScreen";
 import Settings from "../pages/Settings";
-import PicturesPageScreenStackNavigator from "./PicturesPageScreenStackNavigator";
-import GaragesPageScreenStackNavigator from "./GaragesPageScreenStackNavigator";
 import PicturePage from "../pages/PicturePage";
 import GaragePage from "../pages/GaragePage";
 

@@ -81,6 +81,7 @@ const Picture = ({
   const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
   const lastTap = useRef<number | null>(null);
   const scaleAnim = useRef(new Animated.Value(0)).current;
+  const defaultAvatar = pictureWithInfos.avatar_url ?? "https://i.pravatar.cc/100?img=9";
 
   const [isLiked, setIsLiked] = useState(pictureWithInfos.is_liked);
   const [likeCount, setLikeCount] = useState(pictureWithInfos.likes_count);
@@ -179,7 +180,7 @@ const Picture = ({
         <View style={styles.header}>
 
           <Image
-            source={{ uri: 'https://i.pravatar.cc/100?img=6' }}
+            source={{ uri: defaultAvatar }}
             style={styles.avatar}
           />
 

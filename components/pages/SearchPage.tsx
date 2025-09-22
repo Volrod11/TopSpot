@@ -9,13 +9,15 @@ import {
   TextInput,
   Pressable,
   Dimensions,
-  SafeAreaView,
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-import PicturesPage from "./PicturesPage";
+import PicturesList from "./PicturesList";
 import GaragesPage from "./GaragesPage";
 import SearchPropositions from "./SearchPropositions";
+import { fetchFilteredPictures } from "../../utils/getPicturesPage";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -37,6 +39,13 @@ export default function SearchPage({ onClose }: SearchScreenProps) {
     }, 300);
     return () => clearTimeout(timer);
   }, []);
+
+
+  const fetchImageWrapper = async (limit: number, offset: number) => {
+    const images = await fetchFilteredPictures(null, null, null, search, null, null, limit, offset);
+
+    return images;
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -117,13 +126,7 @@ export default function SearchPage({ onClose }: SearchScreenProps) {
             ) : (
               <>
                 {activeTab === "photos" && (
-                  <PicturesPage
-                    user_id={null}
-                    brand_filter={null}
-                    period={null}
-                    sort_by={null}
-                    query={search}
-                  />
+                  <PicturesList fetchImages={fetchImageWrapper} resetKey={search}/>
                 )}
                 {activeTab === "garages" && (
                   <GaragesPage

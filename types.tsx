@@ -1,4 +1,60 @@
 // types.ts
+
+
+//Enumeration
+export enum FetchFunction {
+  filtered,
+  nearby
+}
+
+//Types simples
+export type Picture = {
+  picture_id: string;
+  picture_url: string;
+};
+
+export type NearbyCar = {
+  picture_id: string,
+  url: string,
+  marque: string,
+  modele: string,
+  variante: string,
+  city: string,
+  username: string;
+  profile_id: string,
+  avatar_url: string,
+  likes_count: number,
+  comments_count: number
+};
+
+export type CityRegion = {
+  city: string | null,
+  region: string | null
+};
+
+export type PictureAndCartype = {
+    id: string | null;
+    url: string | null;
+    car_type: string;
+};
+
+
+export type Garage_with_pictures = {
+    garage_id: string;
+    username: string;
+    avatar_url: string | null;
+    nb_categories: number;
+    total_likes: number;
+    total_comments: number;
+    total_pictures: number;
+    total_views: number;
+    created_at: string;
+    rang: number;
+    is_liked: boolean;
+    top_pictures_by_category: PictureAndCartype[];
+};
+
+
 /*export type RootStackParamList = {
     PicturesPage: { user_id: string, brand_filter?: string  };
     ProfileScreen: { };
@@ -19,7 +75,19 @@ export type HomeScreenStackParamList = {
   MessagingPage: {};
   ConversationPage: { conversation_id: string };
   NotificationsPage: {};
-  PicturesPage: { user_id: string | null; brand_filter?: string | null; period?: string | null; sort_by?: string | null; query?: string | null };
+  PicturesPage: {
+    fetchFunction: "filtered" | "nearby";  //'filtered' ou 'nearby'
+    user_id?: string | null,
+    brand?: string | null,
+    period?: string | null,
+    query?: string | null,
+    sort_by?: string | null,
+    category?: string | null,
+    city?: string | null,
+    region?: string | null,
+    limit?: number | null,
+    offset?: number | null,
+  };
   PicturePage: { idPicture: string; picture: string };
   GaragesPage: { user_id: string; show_my_garage: boolean; garage_type: string; is_finished?: boolean | null; sort_by?: string | null; query?: string | null; onCountChange?: (count: number) => void };
   GaragePage: { garage_id: string };
@@ -45,11 +113,17 @@ export type SearchPageStackParamList = {
 
 export type PicturesStackParamList = {
   PicturesPage: {
-    user_id: string | null;
-    brand_filter?: string | null;
-    period?: string | null;
-    sort_by?: string | null;
-    query?: string | null;
+    fetchFunction: "filtered" | "nearby";  //'filtered' ou 'nearby'
+    user_id?: string | null,
+    brand?: string | null,
+    period?: string | null,
+    query?: string | null,
+    sort_by?: string | null,
+    category?: string | null,
+    city?: string | null,
+    region?: string | null,
+    limit?: number | null,
+    offset?: number | null,
   };
   PicturePage: { idPicture: string; picture: string };
 };
@@ -75,3 +149,5 @@ export type HomeScreenStackParamList = {
     PicturesPage: { user_id: string|null, brand_filter?: string|null, period?: string|null, sort_by?: string|null, query?: string|null };
     PicturePage: { idPicture: string, picture: string };
 };*/
+
+

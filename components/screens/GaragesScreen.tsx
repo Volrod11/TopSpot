@@ -16,7 +16,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import MiniGarageCard from '../GarageComponent/components/MiniGarageCard';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import LastsSpots from '../HomeComponent/components/LastsSpots';
+import LastsSpots from '../HomeComponent/components/NearbyCars';
 import EventsHeader from '../GeneralComponent/Header';
 import SegmentedButtons from '../GeneralComponent/SegmentedButtons';
 import { useUser } from "../../context/UserContext";

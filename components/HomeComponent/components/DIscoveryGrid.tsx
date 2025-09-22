@@ -1,33 +1,47 @@
-import React from "react";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React, { useEffect } from "react";
 import { View, Text, ImageBackground, Pressable, StyleSheet, FlatList } from "react-native";
+import { FetchFunction, HomeScreenStackParamList } from "../../../types";
+import { useNavigation } from "@react-navigation/native";
 
 type Filters = {
-    sortBy?: string;
-    brand?: string;
-    category?: string,
-    period?: string;
-    query?: string;
+  sortBy?: string;
+  brand?: string;
+  category?: string;
+  period?: string;
+  query?: string;
 };
 
 type TopPictures = {
-    section_id: string,
-    title: string,
-    type: string,
-    filters: Filters,
-    picture_id: string,
-    picture_url: string,
-    car_id: string,
-    likes: number
+  section_id: string,
+  title: string,
+  type: string,
+  filters: Filters,
+  picture_id: string,
+  picture_url: string,
+  car_id: string,
+  likes: number
 };
 
 type DiscoveryGridProps = {
- topsPictures: TopPictures[]
+  topsPictures: TopPictures[]
 };
 
 
-export default function DiscoveryGrid({topsPictures}: DiscoveryGridProps) {
+export default function DiscoveryGrid({ topsPictures }: DiscoveryGridProps) {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
+
   const renderItem = ({ item }: { item: TopPictures }) => (
-    <Pressable style={styles.card}>
+    <Pressable style={styles.card} onPress={() =>
+      navigation.navigate('PicturesPage', {
+        fetchFunction: "filtered",
+        brand: item.filters.brand ?? null,
+        period: item.filters.period ?? null,
+        query: item.filters.query ?? null,
+        sort_by: item.filters.sortBy ?? null,
+        category: item.filters.category ?? null,
+      })
+    }>
       <ImageBackground
         source={{ uri: item.picture_url }}
         style={styles.image}

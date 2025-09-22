@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Pressable } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import EventCard from '../../MapComponent/EventCard';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { HomeScreenStackParamList } from '../../../types';
 
 type Categorie = {
   id: string,
@@ -57,7 +60,7 @@ const NearbyEvent = ({
   rating = "4.6",
   onViewOnMap = () => console.log('Voir sur la carte pressed')
 }) => {
-
+  const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
   const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
@@ -71,21 +74,32 @@ const NearbyEvent = ({
   return (
     <View style={styles.container}>
       {/* Header avec icône et infos */}
-      <FlatList
-        data={events}
-        keyExtractor={(item) => item.event_id + "." + item.occurence_id}
-        renderItem={({ item }) => <EventCard
-          start_time={item.start_time}
-          end_time={item.end_time}
-          title={item.name}
-          location={item.street + " - " + item.city}
-          participants={item.nb_participants}
-          image_url={item.image_url}
-          tags={item.tags}
-          cats={item.categories}
-        />}
-        contentContainerStyle={{ padding: 12 }}
-      />
+      <Pressable style={styles.container} onPress={() =>
+        navigation.navigate('PicturesPage', {
+          fetchFunction: "nearby",
+          brand: item.filters.brand ?? null,
+          period: item.filters.period ?? null,
+          query: item.filters.query ?? null,
+          sort_by: item.filters.sortBy ?? null,
+          category: item.filters.category ?? null,
+        })
+      }>
+        <FlatList
+          data={events}
+          keyExtractor={(item) => item.event_id + "." + item.occurence_id}
+          renderItem={({ item }) => <EventCard
+            start_time={item.start_time}
+            end_time={item.end_time}
+            title={item.name}
+            location={item.street + " - " + item.city}
+            participants={item.nb_participants}
+            image_url={item.image_url}
+            tags={item.tags}
+            cats={item.categories}
+          />}
+          contentContainerStyle={{ padding: 12 }}
+        />
+      </Pressable>
     </View>
   );
 };

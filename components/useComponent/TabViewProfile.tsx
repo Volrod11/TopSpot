@@ -4,6 +4,7 @@ import { TabView, TabBar } from 'react-native-tab-view';
 import PicturesPage from '../pages/PicturesPage';
 import GaragesPage from '../pages/GaragesPage';
 import { useUser } from '../../context/UserContext';
+import PicturesList from '../pages/PicturesList';
 
 type State = {
   index: number;
@@ -21,7 +22,7 @@ const TabViewProfile: React.FC = () => {
   const renderScene = ({ route }: { route: { key: string } }) => {
     switch (route.key) {
       case 'pictures':
-        return <PicturesPage user_id={currentUserId ?? null} brand_filter={null} />;
+        //return <PicturesList fetchFunction={"filtered"} user_id={currentUserId ?? null} brand_filter={null} />;
       case 'garages':
         return (
           <GaragesPage
