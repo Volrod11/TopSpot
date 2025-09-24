@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Garage_with_pictures_and_description, HomeScreenStackParamList } from '../../../types';
 import { supabase } from '../../../lib/supabase';
 import DoubleTapLike from '../../GeneralComponent/DoubleTapLike';
+import CommentsModal from '../../GeneralComponent/CommentsModal';
 
 type GarageProps = {
     garage: Garage_with_pictures_and_description
@@ -205,6 +206,14 @@ const PictureCard = ({
                     <MaterialCommunityIcons name="share-variant" size={28} color="#888" />
                 </TouchableOpacity>
             </View>
+
+
+            < CommentsModal
+                visible={visible}
+                onClose={() => setVisible(false)}
+                picture_id={garage_id}
+                onCommentsChange={(count: number) => setCommentsCount(count)}
+            />
         </View>
     )
 };
