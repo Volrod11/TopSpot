@@ -13,29 +13,22 @@ import { createStackNavigator, StackNavigationProp } from '@react-navigation/sta
 import recognizeModel from '../../api/carRecognition/carRecognitionApi';
 import Swiper from 'react-native-swiper';
 import { log } from 'console';
+import { useUser } from '../../context/UserContext';
 
 const Tab = createStackNavigator<RootStackParamList>();
 const { width, height } = Dimensions.get('window');
 
 //Type
-type CameraScreenRouteProp = RouteProp<CameraScreenStackParamList, 'CameraScreen'>;
 type CameraScreenNavigationProp = StackNavigationProp<CameraScreenStackParamList, 'PhotoDetailsScreen'>;
 
 type RootStackParamList = {
-    CameraScreen: { user_id: string };
-    PhotoDetailsScreen: { picture: string, user_id: string };
+    PhotoDetailsScreen: { picture: string };
 }
 
-type Props = {
-    route: CameraScreenRouteProp;
-};
 
 
 
-
-
-
-const CameraScreen: React.FC<{ route: CameraScreenRouteProp }> = ({ route }) => {
+const CameraScreen: React.FC = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [photos, setPhotos] = useState<string[]>([]);
@@ -44,8 +37,6 @@ const CameraScreen: React.FC<{ route: CameraScreenRouteProp }> = ({ route }) => 
   const [currentPhoto, setCurrentPhoto] = useState<string |null>(null);
 
   const navigation = useNavigation<CameraScreenNavigationProp>();
-  const { user_id } = route.params;
-  console.log(user_id);
   
   const cameraRef = useRef<CameraView>(null);
 
@@ -101,7 +92,7 @@ const CameraScreen: React.FC<{ route: CameraScreenRouteProp }> = ({ route }) => 
   const handleLogAndRedirect = async () => {
 
     if (currentPhoto) {
-      navigation.navigate('PhotoDetailsScreen', { picture: currentPhoto, user_id: user_id });
+      navigation.navigate('PhotoDetailsScreen', { picture: currentPhoto });
       setPhotos([]);
       setSelectedPhotoIndex(null);
     }

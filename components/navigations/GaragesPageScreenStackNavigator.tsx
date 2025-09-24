@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import GaragesPage from '../HomeComponent/pages/GaragesPage';
-import GaragePage from '../HomeComponent/pages/GaragePage'; 
+import GaragesPage from '../pages/GaragesPage';
+import GaragePage from '../pages/GaragePage'; 
 
 const Stack = createStackNavigator();
 
