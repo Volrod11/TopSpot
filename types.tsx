@@ -33,26 +33,71 @@ export type CityRegion = {
 };
 
 export type PictureAndCartype = {
-    id: string | null;
-    url: string | null;
-    car_type: string;
+  id: string | null;
+  url: string | null;
+  car_type: string;
 };
 
 
 export type Garage_with_pictures = {
-    garage_id: string;
-    username: string;
-    avatar_url: string | null;
-    nb_categories: number;
-    total_likes: number;
-    total_comments: number;
-    total_pictures: number;
-    total_views: number;
-    created_at: string;
-    rang: number;
-    is_liked: boolean;
-    top_pictures_by_category: PictureAndCartype[];
+  garage_id: string;
+  username: string;
+  avatar_url: string | null;
+  nb_categories: number;
+  total_likes: number;
+  total_comments: number;
+  total_pictures: number;
+  total_views: number;
+  created_at: string;
+  rang: number;
+  is_liked: boolean;
+  top_pictures_by_category: PictureAndCartype[];
 };
+
+export type Garage_with_pictures_and_description = {
+  garage_id: string;
+  username: string;
+  avatar_url: string | null;
+  nb_categories: number;
+  total_likes: number;
+  total_comments: number;
+  total_pictures: number;
+  total_views: number;
+  description: string,
+  created_at: string;
+  rang: number;
+  is_liked: boolean;
+  top_pictures_by_category: PictureAndCartype[];
+};
+
+
+
+
+export type Pictures_with_infos = {
+  picture_id: string;
+  description: string | null;
+  picture_url: string;
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  likes_count: number;
+  comments_count: number;
+  relevance_score: number;
+  is_liked: boolean;
+  car_id: string,
+  car_marque: string,
+  car_modele: string,
+  car_variante: string,
+  car_annee: number,
+  car_motorisation: string,
+  car_cehvaux: number,
+  car_couple: number,
+  car_poids: number,
+  car_acceleration_0_100: number,
+  car_vmax: number,
+  car_nb_cylindre: number,
+  car_structure_moteur: string
+}
 
 
 /*export type RootStackParamList = {

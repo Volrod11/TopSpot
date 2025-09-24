@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Pressable, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { HomeScreenStackParamList } from '../../../types';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { HomeScreenStackParamList, Pictures_with_infos } from '../../../types';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../../../lib/supabase';
@@ -11,37 +10,9 @@ import CommentsModal from '../../GeneralComponent/CommentsModal';
 import DoubleTapLike from '../../GeneralComponent/DoubleTapLike';
 
 
-type PicturePageProps = {
+export type PicturePageProps = {
   pictureWithInfos: Pictures_with_infos;
 }
-
-type Pictures_with_infos = {
-  picture_id: string;
-  description: string | null;
-  picture_url: string;
-  user_id: string;
-  username: string;
-  avatar_url: string | null;
-  likes_count: number;
-  comments_count: number;
-  relevance_score: number;
-  is_liked: boolean;
-  car_id: string,
-  car_marque: string,
-  car_modele: string,
-  car_variante: string,
-  car_annee: number,
-  car_motorisation: string,
-  car_cehvaux: number,
-  car_couple: number,
-  car_poids: number,
-  car_acceleration_0_100: number,
-  car_vmax: number,
-  car_nb_cylindre: number,
-  car_structure_moteur: string
-}
-
-
 
 
 //BDD

@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useRef, useState } from 'react';
+import { View, Text, Image, StyleSheet, Pressable, Animated, TouchableOpacity } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Garage_with_pictures, HomeScreenStackParamList } from '../../../types';
+import { Garage_with_pictures_and_description, HomeScreenStackParamList } from '../../../types';
 import { supabase } from '../../../lib/supabase';
+import DoubleTapLike from '../../GeneralComponent/DoubleTapLike';
 
 type GarageProps = {
-    garage: Garage_with_pictures
+    garage: Garage_with_pictures_and_description
 };
 
 
@@ -49,9 +50,12 @@ const PictureCard = ({
     images,
     likes,
     comments,
+    description,
     is_liked,
     nbCategories,
 }) => {
+    const scaleAnim = useRef(new Animated.Value(0)).current;
+
     const [isLiked, setIsLiked] = useState(is_liked);
     const [likeCount, setLikeCount] = useState(likes);
     const [visible, setVisible] = useState(false);
@@ -87,9 +91,32 @@ const PictureCard = ({
         setIsLoading(false);
     };
 
+    const handleDoubleTap = async () => {
+        if (!isLiked) {
+            handleLike();
+            animateHeart();
+        }
+    };
+
+
+    const animateHeart = () => {
+        scaleAnim.setValue(0);
+        Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 4,
+            useNativeDriver: true,
+        }).start(() => {
+            Animated.timing(scaleAnim, {
+                toValue: 0,
+                duration: 400,
+                useNativeDriver: true,
+            }).start();
+        });
+    };
+
 
     return (
-        <View style={styles.card}>
+        <View style={styles.widgetCard}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.userInfo}>
@@ -106,38 +133,77 @@ const PictureCard = ({
                 )}
             </View>
 
-            {/* Images Grid */}
-            <View style={styles.imageGrid}>
-                {images.map((_pic, index) => (
-                    <Image key={index} source={
-                        _pic.id === null
-                            ? require('../../../assets/no_picture.png')
-                            : { uri: _pic.url }
-                    } style={styles.image} />
-                ))}
-            </View>
+            {/* ✅ Description (au-dessus des images) */}
+            {description ? (
+                <View style={styles.descriptionContainer}>
+                    <Text style={styles.descriptionText}>{description}</Text>
+                </View>
+            ) : null}
+
+            {/* Images */}
+            <DoubleTapLike onDoubleTap={handleDoubleTap}>
+                <View style={styles.imageHeart}>
+                    <View style={styles.imageGrid}>
+                        {images.map((_pic, index) => (
+                            <Image
+                                key={index}
+                                source={
+                                    _pic.id === null
+                                        ? require('../../../assets/no_picture.png')
+                                        : { uri: _pic.url }
+                                }
+                                style={styles.image}
+                            />
+                        ))}
+                    </View>
+
+                    {/* ✅ Badge unique */}
+                    {nbCategories === 4 && (
+                        <View style={styles.completeBadge}>
+                            <Text style={styles.completeText}>Complet ✔</Text>
+                        </View>
+                    )}
+
+                    {/* ❤️ Animation */}
+                    <Animated.View
+                        style={[
+                            styles.heartContainer,
+                            { transform: [{ scale: scaleAnim }], opacity: scaleAnim },
+                        ]}
+                    >
+                        <Image
+                            source={require("../../../assets/heart.png")}
+                            style={styles.heart}
+                        />
+                    </Animated.View>
+                </View>
+            </DoubleTapLike>
 
             {/* Footer */}
             <View style={styles.footer}>
-                <View style={styles.actionItem}>
-
-                    {isLiked ?
-                        <Pressable onPress={handleUnlike}>
-                            <Ionicons name="heart" size={30} color="#FF6347" />
+                <View style={styles.leftActions}>
+                    <View style={styles.actionItem}>
+                        {isLiked ? (
+                            <Pressable onPress={handleUnlike}>
+                                <Ionicons name="heart" size={28} color="#FF6347" />
+                            </Pressable>
+                        ) : (
+                            <Pressable onPress={handleLike}>
+                                <Ionicons name="heart-outline" size={28} color="#333" />
+                            </Pressable>
+                        )}
+                        <Text style={styles.actionText}>{likeCount}</Text>
+                    </View>
+                    <View style={styles.actionItem}>
+                        <Pressable onPress={() => setVisible(true)}>
+                            <Ionicons name="chatbubble-outline" size={28} color="#333" />
                         </Pressable>
-                        :
-                        <Pressable onPress={handleLike}>
-                            <Ionicons name="heart-outline" size={30} color="black" />
-                        </Pressable>}
-                    <Text style={styles.actionText}>{likeCount}</Text>
+                        <Text style={styles.actionText}>{comments}</Text>
+                    </View>
                 </View>
-                <View style={styles.actionItem}>
-                    <Pressable onPress={() => setVisible(true)}>
-                        <Ionicons name="chatbubble-outline" size={30} color="black" />
-                    </Pressable>
-                    <Text style={styles.actionText}>{commentsCount}</Text>
-                </View>
-                {nbCategories === 4 && <Text style={styles.complete}>Complet ✔</Text>}
+                <TouchableOpacity>
+                    <MaterialCommunityIcons name="share-variant" size={28} color="#888" />
+                </TouchableOpacity>
             </View>
         </View>
     )
@@ -161,6 +227,7 @@ const Garage = ({
                     nbCategories={garage.nb_categories}
                     likes={garage.total_likes}
                     comments={garage.total_comments}
+                    description={garage.description}
                     is_liked={garage.is_liked}
                     images={garage.top_pictures_by_category}
                 />
@@ -184,6 +251,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
+        paddingHorizontal: 5
     },
     userInfo: {
         flexDirection: 'row',
@@ -224,13 +292,14 @@ const styles = StyleSheet.create({
     image: {
         width: '49.5%',
         height: 150,
-        borderRadius: 3,
+        //borderRadius: 3,
         marginBottom: 2,
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: 5
     },
     stats: {
         flexDirection: 'row',
@@ -251,10 +320,73 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 15,
     },
+    leftActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     actionText: {
         color: '#333',
         marginLeft: 5,
         fontSize: 14,
+    },
+    imageHeart: {
+        position: "relative",
+    },
+    heartContainer: {
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        width: 100,
+        height: 100,
+        marginLeft: -50,
+        marginTop: -50,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    heart: {
+        width: 100,
+        height: 100,
+        tintColor: "white"
+    },
+    completeBadge: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(39, 146, 18, 0.6)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        zIndex: 10, // 👈 pour s'assurer que ça passe devant les images
+    },
+    completeText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 12,
+    },
+    widgetCard: {
+        backgroundColor: '#fff',
+        borderRadius: 18,
+        paddingVertical: 12,
+        marginVertical: 12,
+        marginHorizontal: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 4, // ✅ Ombre Android
+    },
+    descriptionContainer: {
+        backgroundColor: '#f9f9f9',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        marginHorizontal: 5,
+        marginBottom: 10,   // ✅ espace avant les images
+    },
+    descriptionText: {
+        color: '#444',
+        fontSize: 13,
+        lineHeight: 18,
     },
 });
 

@@ -61,7 +61,7 @@ const fetchGaragesFromDatabase = async (
   const { data: Garage_with_pictures, error } = await supabase.rpc(
     "get_garages_and_car_types_with_details",
     {
-      p_profile: user_id,
+      p_profile_id: user_id,
       p_empty_garage: is_empty_garage,
       p_duration_type: duration_type,
       p_is_garage_finished: is_finished,

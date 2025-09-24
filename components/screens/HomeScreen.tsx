@@ -19,7 +19,7 @@ import CardSection from "../HomeComponent/components/CardSection";
 import LastsSpots from "../HomeComponent/components/NearbyCars";
 import Picture from "../HomeComponent/components/Picture";
 import { supabase } from "../../lib/supabase";
-import { CityRegion, HomeScreenStackParamList, NearbyCar, Garage_with_pictures } from "../../types";
+import { CityRegion, HomeScreenStackParamList, NearbyCar, Garage_with_pictures_and_description, Pictures_with_infos } from "../../types";
 import SearchPage from "../pages/SearchPage";
 import { useRef, useEffect } from "react";
 import MultipleCardSection from "../HomeComponent/MultipleCardSection";
@@ -62,37 +62,6 @@ type HomepageContent = {
     filters: Filters;
 };
 
-type Pictures_with_infos = {
-    picture_id: string;
-    description: string | null;
-    picture_url: string;
-    user_id: string;
-    username: string;
-    avatar_url: string | null;
-    likes_count: number;
-    comments_count: number;
-    relevance_score: number;
-    is_liked: boolean;
-    car_id: string,
-    car_marque: string,
-    car_modele: string,
-    car_variante: string,
-    car_annee: number,
-    car_motorisation: string,
-    car_cehvaux: number,
-    car_couple: number,
-    car_poids: number,
-    car_acceleration_0_100: number,
-    car_vmax: number,
-    car_nb_cylindre: number,
-    car_structure_moteur: string
-}
-
-
-
-
-
-
 type TopPictures = {
     section_id: string,
     title: string,
@@ -112,7 +81,7 @@ type Profiles = {
 
 type FeedItem =
     | { type: "picture"; data: Pictures_with_infos }
-    | { type: "garage"; data: Garage_with_pictures };
+    | { type: "garage"; data: Garage_with_pictures_and_description };
 
 
 const fetchHomepageContents = async () => {
@@ -139,9 +108,9 @@ const fetchHomePagePictures = async (limit: number, offset: number) => {
 }
 
 const fetchHomePageGarages = async (limit: number, offset: number) => {
-    const { data, error } = await supabase.rpc("get_garages_and_car_types_with_details", {
+    const { data, error } = await supabase.rpc("get_garages_and_car_types_with_details_and_description", {
         p_query: null,
-        p_profile: null,
+        p_profile_id: null,
         p_only_one: false,
         p_empty_garage: false,
         p_is_garage_finished: true,
@@ -155,7 +124,7 @@ const fetchHomePageGarages = async (limit: number, offset: number) => {
         return [];
     }
 
-    return data as Garage_with_pictures[];
+    return data as Garage_with_pictures_and_description[];
 }
 
 
@@ -264,7 +233,7 @@ export default function HomeScreen() {
     const [searchVisible, setSearchVisible] = useState(false);
     const [homepageContents, setHomepageContents] = useState<HomepageContent[]>([]);
     const [pictures, setPictures] = useState<Pictures_with_infos[]>([]);
-    const [garages, setGarages] = useState<Garage_with_pictures[]>([]);
+    const [garages, setGarages] = useState<Garage_with_pictures_and_description[]>([]);
     const [offset, setOffset] = useState(0);
     const [loadingPicturesAndGarages, setLoadingPicturesAndGarages] = useState(false);
     const [hasMorePicture, setHasMorePicture] = useState(true);
@@ -297,9 +266,9 @@ export default function HomeScreen() {
 
 
         let newPictures: Pictures_with_infos[] = [];
-        let newGarages: Garage_with_pictures[] = [];
+        let newGarages: Garage_with_pictures_and_description[] = [];
         let filteredPictures: Pictures_with_infos[] = [];
-        let filteredGarages: Garage_with_pictures[] = [];
+        let filteredGarages: Garage_with_pictures_and_description[] = [];
 
         if (hasMorePicture) {
             newPictures = await fetchHomePagePictures(limit, offset);
