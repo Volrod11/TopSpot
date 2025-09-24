@@ -34,6 +34,7 @@ import NearbyEvent from "../HomeComponent/components/NearbyEvent";
 import useUserLocation from "../../utils/useUserLocation";
 import { getCityRegionFromCoords } from "../../utils/getCityRegionFromCoords";
 import NearbyCars from "../HomeComponent/components/NearbyCars";
+import NewGarageCard from "../HomeComponent/components/NewGarageCard";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -397,7 +398,7 @@ export default function HomeScreen() {
                 keyExtractor={(item) =>
                     item.type === 'picture' ? `pic-${item.data.picture_id}` : `garage-${item.data.garage_id}`
                 }
-                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
                 onEndReached={loadPicturesAndGarages}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={loadingPicturesAndGarages ? <LoadingSpinner /> : null}
@@ -424,7 +425,7 @@ export default function HomeScreen() {
                     <>
                         <Header openSearch={openSearch} />
 
-                        
+                        <NewGarageCard/>
 
                         <DiscoveryGrid topsPictures={topsPictures} />
 

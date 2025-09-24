@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, StyleSheet, Pressable, Animated, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -56,6 +56,7 @@ const PictureCard = ({
     nbCategories,
 }) => {
     const scaleAnim = useRef(new Animated.Value(0)).current;
+    const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
 
     const [isLiked, setIsLiked] = useState(is_liked);
     const [likeCount, setLikeCount] = useState(likes);
@@ -63,6 +64,9 @@ const PictureCard = ({
     const [isLoading, setIsLoading] = useState(false);
     const [commentsCount, setCommentsCount] = useState(0);
 
+    useEffect(() => {
+        setCommentsCount(comments);
+    }, [comments])
 
     const handleLike = async () => {
         if (!isLoading) {
@@ -73,9 +77,9 @@ const PictureCard = ({
                 setIsLiked(true);
                 setLikeCount(prev => prev + 1);
             }
-        }
 
-        setIsLoading(false);
+            setIsLoading(false);
+        }
     };
 
     const handleUnlike = async () => {
@@ -87,9 +91,9 @@ const PictureCard = ({
                 setIsLiked(false);
                 setLikeCount(prev => prev - 1);
             }
-        }
 
-        setIsLoading(false);
+            setIsLoading(false);
+        }
     };
 
     const handleDoubleTap = async () => {
@@ -115,13 +119,19 @@ const PictureCard = ({
         });
     };
 
+    const handleSingleTap = () => {
+        navigation.navigate('GaragePage', {
+            garage_id: garage_id
+        })
+    };
+
 
     return (
         <View style={styles.widgetCard}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.userInfo}>
-                    <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+                    <Image source={{ uri: avatarUrl || "https://i.pravatar.cc/100?img=8" }} style={styles.avatar} />
                     <View>
                         <Text style={styles.username}>{username}</Text>
                         <Text style={styles.location}>{location}</Text>
@@ -142,7 +152,9 @@ const PictureCard = ({
             ) : null}
 
             {/* Images */}
-            <DoubleTapLike onDoubleTap={handleDoubleTap}>
+            <DoubleTapLike
+                onDoubleTap={handleDoubleTap}
+                onSingleTap={handleSingleTap}>
                 <View style={styles.imageHeart}>
                     <View style={styles.imageGrid}>
                         {images.map((_pic, index) => (
@@ -199,7 +211,7 @@ const PictureCard = ({
                         <Pressable onPress={() => setVisible(true)}>
                             <Ionicons name="chatbubble-outline" size={28} color="#333" />
                         </Pressable>
-                        <Text style={styles.actionText}>{comments}</Text>
+                        <Text style={styles.actionText}>{commentsCount}</Text>
                     </View>
                 </View>
                 <TouchableOpacity>
@@ -211,7 +223,8 @@ const PictureCard = ({
             < CommentsModal
                 visible={visible}
                 onClose={() => setVisible(false)}
-                picture_id={garage_id}
+                picture_or_garage_id={garage_id}
+                content_type={"garage"}
                 onCommentsChange={(count: number) => setCommentsCount(count)}
             />
         </View>
@@ -222,25 +235,21 @@ const PictureCard = ({
 const Garage = ({
     garage
 }: GarageProps) => {
-    const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
-
     return (
         <View style={styles.container}>
-            <Pressable >
-                <PictureCard
-                    garage_id={garage.garage_id}
-                    avatarUrl="https://i.pravatar.cc/100?img=8"
-                    username={garage.username}
-                    location="Paris, France"
-                    rang={garage.rang}
-                    nbCategories={garage.nb_categories}
-                    likes={garage.total_likes}
-                    comments={garage.total_comments}
-                    description={garage.description}
-                    is_liked={garage.is_liked}
-                    images={garage.top_pictures_by_category}
-                />
-            </Pressable>
+            <PictureCard
+                garage_id={garage.garage_id}
+                avatarUrl={garage.avatar_url}
+                username={garage.username}
+                location="Paris, France"
+                rang={garage.rang}
+                nbCategories={garage.nb_categories}
+                likes={garage.total_likes}
+                comments={garage.total_comments}
+                description={garage.description}
+                is_liked={garage.is_liked}
+                images={garage.top_pictures_by_category}
+            />
         </View>
     )
 }
@@ -260,17 +269,17 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
-        paddingHorizontal: 5
+        paddingHorizontal: 10
     },
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     avatar: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        marginRight: 8,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 10,
     },
     username: {
         color: '#333',
@@ -308,7 +317,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 5
+        paddingHorizontal: 10
     },
     stats: {
         flexDirection: 'row',
@@ -365,7 +374,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 8,
-        zIndex: 10, // 👈 pour s'assurer que ça passe devant les images
+        zIndex: 10,
     },
     completeText: {
         color: '#fff',
@@ -377,20 +386,20 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         paddingVertical: 12,
         marginVertical: 12,
-        marginHorizontal: 10,
+        marginHorizontal: 5,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
         shadowRadius: 5,
-        elevation: 4, // ✅ Ombre Android
+        elevation: 4,
     },
     descriptionContainer: {
-        backgroundColor: '#f9f9f9',
+        //backgroundColor: '#f9f9f9',
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 12,
-        marginHorizontal: 5,
-        marginBottom: 10,   // ✅ espace avant les images
+        marginHorizontal: 10,
+        marginBottom: 10,
     },
     descriptionText: {
         color: '#444',

@@ -18,7 +18,9 @@ import { useUser } from "../../context/UserContext";
 type CommentsModalProps = {
   visible: boolean,
   onClose: () => void,
-  picture_id: string
+  picture_or_garage_id: string,
+  content_type: "picture" | "garage"
+  ,
   onCommentsChange?: (count: number) => void;
 };
 
@@ -42,6 +44,17 @@ const fetchPictureComments = async (picture_id: string) => {
 };
 
 
+const fetchGarageComments = async (garage_id: string) => {
+  const { data, error } = await supabase.rpc("get_garage_comments", { p_garage_id: garage_id });
+
+  if (error) {
+    console.error("Error fetching garage comments", error);
+  }
+
+  return data as Comment[];
+};
+
+
 const insertPictureComment = async (picture_id: string, comment: string) => {
   const { data, error } = await supabase.rpc("insert_comment_in_picture", {
     p_picture_id: picture_id,
@@ -56,7 +69,21 @@ const insertPictureComment = async (picture_id: string, comment: string) => {
 };
 
 
-export default function CommentsModal({ visible, onClose, picture_id, onCommentsChange }: CommentsModalProps) {
+const insertGarageComment = async (garage_id: string, comment: string) => {
+  const { data, error } = await supabase.rpc("insert_comment_in_garage", {
+    p_garage_id: garage_id,
+    p_comment: comment
+  });
+
+  if (error) {
+    console.error("Error adding comment", error);
+  }
+
+  return { data, error };
+};
+
+
+export default function CommentsModal({ visible, onClose, picture_or_garage_id, content_type, onCommentsChange }: CommentsModalProps) {
   const { currentUserId, username, avatarUrl } = useUser();
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -67,12 +94,16 @@ export default function CommentsModal({ visible, onClose, picture_id, onComments
 
   useEffect(() => {
     const fetchPictureCommentsFromDatabase = async () => {
-      const loadedComments = await fetchPictureComments(picture_id);
-      setComments(loadedComments);
+      const loadedComments =
+      content_type === "picture"
+      ? await fetchPictureComments(picture_or_garage_id)
+      : await fetchGarageComments(picture_or_garage_id);
+
+      setComments(loadedComments || []);
     };
 
     fetchPictureCommentsFromDatabase();
-  }, [picture_id]);
+  }, [picture_or_garage_id]);
 
   useEffect(() => {
     // Notifie le parent du nombre actuel de commentaires
@@ -83,7 +114,13 @@ export default function CommentsModal({ visible, onClose, picture_id, onComments
     if (!newComment.trim()) return;
     setLoading(true);
 
-    const { error } = await insertPictureComment(picture_id, newComment);
+    let error;
+    if (content_type === "picture") {
+      ({ error } = await insertPictureComment(picture_or_garage_id, newComment));
+    } else {
+      ({ error } = await insertGarageComment(picture_or_garage_id, newComment));
+    }
+
     if (!error) {
       const tempComment: Comment = {
         comment_id: Math.random().toString(),
@@ -127,7 +164,7 @@ export default function CommentsModal({ visible, onClose, picture_id, onComments
               keyExtractor={(item) => item.comment_id}
               renderItem={({ item }) => (
                 <View style={styles.commentRow}>
-                  <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+                  <Image source={{ uri: item.avatar_url ||  "https://i.pravatar.cc/100?img=9"}} style={styles.avatar} />
                   <View style={styles.commentContent}>
                     <Text style={styles.userName}>{item.username}</Text>
                     <Text style={styles.commentText}>{item.comment}</Text>

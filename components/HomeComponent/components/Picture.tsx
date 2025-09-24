@@ -103,9 +103,9 @@ const Picture = ({
         setIsLiked(true);
         setLikeCount(prev => prev + 1);
       }
-    }
 
-    setIsLoading(false);
+      setIsLoading(false);
+    }
   };
 
   const handleUnlike = async () => {
@@ -117,9 +117,9 @@ const Picture = ({
         setIsLiked(false);
         setLikeCount(prev => prev - 1);
       }
-    }
 
-    setIsLoading(false);
+      setIsLoading(false);
+    }
   };
 
   const handleDoubleTap = async () => {
@@ -236,7 +236,8 @@ const Picture = ({
       < CommentsModal
         visible={visible}
         onClose={() => setVisible(false)}
-        picture_id={pictureWithInfos.picture_id}
+        picture_or_garage_id={pictureWithInfos.picture_id}
+        content_type={"picture"}
         onCommentsChange={(count: number) => setCommentsCount(count)}
       />
     </View >
