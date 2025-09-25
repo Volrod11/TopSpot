@@ -8,8 +8,10 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { HomeScreenStackParamList } from "../../../types";
 
-const month = "Février";
 const description = "Nouveau défi mensuel disponible !";
 const categories =
     [
@@ -50,10 +52,15 @@ type ContestCardProps = {
 
 
 
-export default function ContestCard() {
+export default function NewGarageCard() {
+    const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList>>();
+    const now = new Date();
+    const monthName = now.toLocaleString("fr-FR", { month: "long" });
+    const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
 
     const onStart = () => {
-        console.log("Défi lancé !")
+        console.log("ok");
     }
     return (
         <LinearGradient
@@ -62,73 +69,58 @@ export default function ContestCard() {
             end={{ x: 1, y: 1 }}
             style={styles.card}
         >
-            <Ionicons name="trophy" size={34} color="#222" style={{ marginBottom: 8 }} />
-            <Text style={styles.title}>Nouveau mois : {month}</Text>
-            <Text style={styles.subtitle}>
-                De nouvelles catégories sont à découvrir !
-            </Text>
+            <Text style={styles.title}>Nouveau mois : {capitalizedMonth}</Text>
+            <Text style={styles.subtitle}>Nouvelles catégories à découvrir !</Text>
 
-            {/* Catégories en grille 2x2 */}
-            <View style={styles.categoriesContainer}>
-                {categories.map((item) => (
-                    <View key={item.id} style={styles.categoryItem}>
-                        {item.icon}
-                        <Text style={styles.categoryText}>{item.label}</Text>
+            <View style={styles.grid}>
+                {categories.map((cat) => (
+                    <View key={cat.id} style={styles.widget}>
+                        {cat.icon}
+                        <Text style={styles.widgetLabel}>{cat.label}</Text>
                     </View>
                 ))}
             </View>
-
-            {/* Bouton */}
-            <TouchableOpacity style={styles.button} onPress={onStart}>
-                <Text style={styles.buttonText}>Commencer le défi</Text>
-            </TouchableOpacity>
         </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     card: {
-        borderRadius: 18,
-        paddingVertical: 22,
-        paddingHorizontal: 18,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         alignItems: "center",
-        margin: 12,
-        shadowColor: "#000",
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-        elevation: 5,
+        marginHorizontal: 12,
+        marginVertical: 8,
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: "bold",
         color: "#222",
-        marginBottom: 4,
+        marginTop: 6,
     },
     subtitle: {
-        fontSize: 14,
+        fontSize: 13,
         color: "#333",
-        marginBottom: 18,
-        textAlign: "center",
+        marginBottom: 14,
     },
-    categoriesContainer: {
+    grid: {
         flexDirection: "row",
         flexWrap: "wrap",
         justifyContent: "space-between",
-        backgroundColor: "rgba(255,255,255,0.25)",
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginBottom: 22,
         width: "100%",
-    },
-    categoryItem: {
-        width: "48%", // 2 colonnes
-        aspectRatio: 1, // carré
-        justifyContent: "center",
-        alignItems: "center",
         marginBottom: 12,
     },
-    categoryText: {
+    widget: {
+        width: "48%",
+        height: 90,
+        backgroundColor: "rgba(255,255,255,0.35)",
+        borderRadius: 12,
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    widgetLabel: {
         marginTop: 6,
         fontSize: 14,
         fontWeight: "600",
@@ -137,13 +129,9 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: "#111",
-        paddingHorizontal: 28,
-        paddingVertical: 12,
-        borderRadius: 25,
-    },
-    buttonText: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: 16,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        marginTop: 6,
     },
 });

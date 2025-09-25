@@ -35,6 +35,9 @@ import useUserLocation from "../../utils/useUserLocation";
 import { getCityRegionFromCoords } from "../../utils/getCityRegionFromCoords";
 import NearbyCars from "../HomeComponent/components/NearbyCars";
 import NewGarageCard from "../HomeComponent/components/NewGarageCard";
+import { fetchHomePageGarages } from "../../utils/fetchHomePageGarages";
+import GarageOfTheMonth from "../HomeComponent/components/GarageOfTheMonth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
@@ -108,26 +111,6 @@ const fetchHomePagePictures = async (limit: number, offset: number) => {
     return data as Pictures_with_infos[];
 }
 
-const fetchHomePageGarages = async (limit: number, offset: number) => {
-    const { data, error } = await supabase.rpc("get_garages_and_car_types_with_details_and_description", {
-        p_query: null,
-        p_profile_id: null,
-        p_only_one: false,
-        p_empty_garage: false,
-        p_is_garage_finished: true,
-        p_duration_type: "monthly",
-        p_sort_by: null,
-        p_limit: limit,
-        p_offset: offset,
-    });
-    if (error) {
-        console.error("Error fetching homepage garages:", error);
-        return [];
-    }
-
-    return data as Garage_with_pictures_and_description[];
-}
-
 
 const fetchTopPictures = async () => {
     const { data, error } = await supabase.rpc('get_random_top_homepage');
@@ -137,7 +120,7 @@ const fetchTopPictures = async () => {
     }
 
     console.log(data);
-    
+
     return data as TopPictures[];
 }
 
@@ -153,59 +136,44 @@ const fetchSuggestedProfiles = async () => {
 }
 
 
-const fetchNearbyCars = async (city :string, region: string) => {
-    const  {data, error} = await supabase.rpc("get_top2_pictures_city_or_region", {
-        p_city: city, p_region : region
+const fetchNearbyCars = async (city: string, region: string) => {
+    const { data, error } = await supabase.rpc("get_top2_pictures_city_or_region", {
+        p_city: city, p_region: region
     })
 
     if (error) {
         console.error("Error fetching top 2 nearby cars");
     }
-    
+
     return data as NearbyCar[];
 }
 
 
 const Header = ({ openSearch }: HeaderProps) => {
-    const slideAnim = useRef(new Animated.Value(height)).current;
-
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
-    const openMessaging = () => {
-        navigation.navigate("MessagingPage");
-    };
-
-    const openNotifications = () => {
-        navigation.navigate("NotificationsPage");
-    };
-
+    const openMessaging = () => navigation.navigate("MessagingPage");
+    const openNotifications = () => navigation.navigate("NotificationsPage");
 
     return (
-        <LinearGradient
-            colors={["#667DE9", "#764DA4"]}
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.gradient}
-        >
+        <View style={styles.headerContainer}>
             <View style={styles.topRow}>
-                <Text style={styles.title}>TopSpot</Text>
+                <Text style={styles.titleDark}>TopSpot</Text>
+
                 <View style={styles.iconsContainer}>
-                    <Pressable
-                        onPress={openNotifications}
-                        style={styles.iconButton}
-                        hitSlop={8}
-                    >
-                        <Ionicons name="notifications-outline" size={20} color="#fff" />
+                    <Pressable onPress={openNotifications} style={styles.iconButton} hitSlop={8}>
+                        <Ionicons name="notifications-outline" size={20} color="#1a1a1a" />
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>3</Text>
                         </View>
                     </Pressable>
+
                     <Pressable
                         onPress={openMessaging}
                         style={[styles.iconButton, { marginLeft: 12 }]}
                         hitSlop={8}
                     >
-                        <Ionicons name="chatbox-outline" size={20} color="#fff" />
+                        <Ionicons name="chatbox-outline" size={20} color="#1a1a1a" />
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>3</Text>
                         </View>
@@ -216,19 +184,36 @@ const Header = ({ openSearch }: HeaderProps) => {
                         style={[styles.iconButton, { marginLeft: 12 }]}
                         hitSlop={8}
                     >
-                        <Ionicons name="search-outline" size={20} color="#fff" />
+                        <Ionicons name="search-outline" size={20} color="#1a1a1a" />
                     </Pressable>
                 </View>
             </View>
-        </LinearGradient >
-    )
-}
+        </View>
+    );
+};
+
+
+
 
 export default function HomeScreen() {
 
     const slideAnim = useRef(new Animated.Value(height)).current;
     const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>>();
     const { location, errorMsg, loading } = useUserLocation(true);
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const insets = useSafeAreaInsets();
+    const headerTranslate = scrollY.interpolate({
+        inputRange: [0, 50],
+        outputRange: [0, -80],
+        extrapolate: "clamp",
+    });
+
+    const headerBackgroundColor = scrollY.interpolate({
+        inputRange: [0, 50],
+        outputRange: ["#FFD93D", "#FFFFFF"], // jaune → blanc
+        extrapolate: "clamp",
+    });
+
 
     const [cityRegion, setCityRegion] = useState<CityRegion>(null);
     const [searchVisible, setSearchVisible] = useState(false);
@@ -243,6 +228,7 @@ export default function HomeScreen() {
     const [topsPictures, setTopsPictures] = useState<TopPictures[]>([]);
     const [suggestedProfiles, setSuggestedProfiles] = useState<Profiles[]>([]);
     const [nearbyCars, setNearbyCars] = useState<NearbyCar[]>([]);
+    const [lastOffset, setLastOffset] = useState(0);
 
     const limit = 10;
     const addedPictureIds = useRef<Set<string>>(new Set());
@@ -284,7 +270,15 @@ export default function HomeScreen() {
 
 
         if (hasMoreGarage) {
-            newGarages = await fetchHomePageGarages(limit, offset);
+            newGarages = await fetchHomePageGarages(null,
+                null,
+                false,
+                true,
+                "monthly",
+                false,
+                limit,
+                offset,
+                null);
             filteredGarages = newGarages.filter(
                 p => !addedGarageIds.current.has(p.garage_id)
             );
@@ -381,7 +375,18 @@ export default function HomeScreen() {
         });
     };
 
+    const handleScroll = (event: any) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
 
+        if (offsetY < 0) {
+            // On est tout en haut, header visible
+            scrollY.setValue(0);
+        } else {
+            scrollY.setValue(offsetY);
+        }
+
+        setLastOffset(offsetY);
+    };
 
 
     if (loading) return <ActivityIndicator size="large" color="blue" />;
@@ -392,6 +397,26 @@ export default function HomeScreen() {
 
     return (
         <View style={styles.homePage}>
+            {/* Zone safe area blanche */}
+            <View style={{ height: insets.top, backgroundColor: 'white' }} />
+
+            <Animated.View
+                style={{
+                    position: 'absolute',
+                    top: insets.top,
+                    left: 0,
+                    right: 0,
+                    height: 80,
+                    zIndex: 1000,
+                    backgroundColor: headerBackgroundColor,
+                    transform: [{ translateY: headerTranslate }],
+                }}
+            >
+                <Header openSearch={openSearch} />
+            </Animated.View>
+
+
+
             <FlatList
                 style={{ flex: 1 }}
                 data={items}
@@ -399,6 +424,7 @@ export default function HomeScreen() {
                     item.type === 'picture' ? `pic-${item.data.picture_id}` : `garage-${item.data.garage_id}`
                 }
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingTop: 80 + insets.top }}
                 onEndReached={loadPicturesAndGarages}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={loadingPicturesAndGarages ? <LoadingSpinner /> : null}
@@ -423,9 +449,7 @@ export default function HomeScreen() {
                 }}
                 ListHeaderComponent={
                     <>
-                        <Header openSearch={openSearch} />
-
-                        <NewGarageCard/>
+                        <GarageOfTheMonth />
 
                         <DiscoveryGrid topsPictures={topsPictures} />
 
@@ -433,15 +457,16 @@ export default function HomeScreen() {
 
 
                         <MultipleCardSection title={"Spots proches de toi"}>
-                            {nearbyCars.length === 2 && <NearbyCars nearbyCar1={nearbyCars[0]} nearbyCar2={nearbyCars[1]} cityRegion={cityRegion}/>}
+                            {nearbyCars.length === 2 && <NearbyCars nearbyCar1={nearbyCars[0]} nearbyCar2={nearbyCars[1]} cityRegion={cityRegion} />}
                         </MultipleCardSection>
 
-                        
+
 
                     </>
                 }
+                scrollEventThrottle={16}
+                onScroll={handleScroll}
             />
-
 
 
             {/* Overlay SearchScreen */}
@@ -477,48 +502,51 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    gradient: {
-        paddingTop: 60,
+    titleDark: {
+        fontSize: 26,
+        fontWeight: "800",
+        color: "#1a1a1a", // texte noir foncé
+        letterSpacing: 0.5,
+    },
+    headerContainer: {
+        backgroundColor: "white",
         paddingHorizontal: 16,
         paddingBottom: 10,
-        width: "100%",
-        marginBottom: 20,
+        height: 80,
+        justifyContent: "flex-end",
+    },
+
+    headerWrapper: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
     },
     topRow: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 15,
+        marginBottom: 10,
     },
     title: {
-        fontSize: 24,
-        fontWeight: "700",
-        color: "white",
-        letterSpacing: 1,
-        textShadowColor: "rgba(0,0,0,0.3)",
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
+        fontSize: 26,
+        fontWeight: "800",
+        color: "#1a1a1a", // Noir profond
+        letterSpacing: 0.5,
     },
     iconsContainer: {
         flexDirection: "row",
         alignItems: "center",
     },
     iconButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "rgba(255,255,255,0.15)",
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: "rgba(0,0,0,0.08)", // cercle noir semi-transparent
         justifyContent: "center",
         alignItems: "center",
-        position: "relative", // pour que le badge soit placé dessus
-    },
-    iconWrapper: {
         position: "relative",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "rgba(255,255,255,0.15)",
-        padding: 6,
-        borderRadius: 20,
     },
     badge: {
         position: "absolute",
@@ -534,11 +562,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-
     badgeText: {
         color: "#fff",
         fontSize: 10,
         fontWeight: "700",
+    },
+    iconWrapper: {
+        position: "relative",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.15)",
+        padding: 6,
+        borderRadius: 20,
     },
     searchContainer: {
         flexDirection: "row",

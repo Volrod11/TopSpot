@@ -8,12 +8,15 @@ import { StatusBar } from 'expo-status-bar'
 import React from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { UserProvider, useUser } from './context/UserContext'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 export default function App() {
   return (
     <UserProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <InnerApp />
+        <SafeAreaProvider>
+          <InnerApp />
+        </SafeAreaProvider>
       </GestureHandlerRootView>
     </UserProvider>
   )
