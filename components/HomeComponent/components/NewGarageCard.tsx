@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -11,6 +11,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeScreenStackParamList } from "../../../types";
+import { supabase } from "../../../lib/supabase";
 
 const description = "Nouveau défi mensuel disponible !";
 const categories =
@@ -50,6 +51,24 @@ type ContestCardProps = {
     onStart: () => void;
 };
 
+type Categorie = {
+    id: string,
+    car_type: string,
+    color: string,
+    icon:  string | null;
+}
+
+
+const fetchCategoriesGarage = async () => {
+    const {data, error} = await supabase.rpc("get_categories_of_actual_monthly_garage");
+
+    if (error) {
+        console.error("Error fetching garage categories");
+        return [];
+    }
+
+    return data as Categorie[];
+}
 
 
 export default function NewGarageCard() {
@@ -58,10 +77,22 @@ export default function NewGarageCard() {
     const monthName = now.toLocaleString("fr-FR", { month: "long" });
     const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
+    const [categories,setCategories] = useState<Categorie[]>([]);
+
 
     const onStart = () => {
         console.log("ok");
     }
+
+    useEffect(() => {
+        const fetchCategoriesGarageFromDatabase = async () => {
+            const loadedCategories = await fetchCategoriesGarage();
+            setCategories(loadedCategories);
+        };
+
+        fetchCategoriesGarageFromDatabase();
+    },[]);
+
     return (
         <LinearGradient
             colors={["#FFD24C", "#F79C22"]}
@@ -75,8 +106,8 @@ export default function NewGarageCard() {
             <View style={styles.grid}>
                 {categories.map((cat) => (
                     <View key={cat.id} style={styles.widget}>
-                        {cat.icon}
-                        <Text style={styles.widgetLabel}>{cat.label}</Text>
+                        {cat.icon || <Ionicons name="car" size={26} color="#222" />}
+                        <Text style={styles.widgetLabel}>{cat.car_type}</Text>
                     </View>
                 ))}
             </View>

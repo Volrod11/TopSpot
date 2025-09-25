@@ -38,8 +38,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderWidth: 4,
-    borderColor: "#764DA4", // couleur TopSpot
-    borderTopColor: "#667DE9",
+    borderColor: "#FFD24C", // couleur TopSpot
+    borderTopColor: "#F79C22",
     borderRadius: 20,
   },
 });

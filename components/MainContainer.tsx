@@ -30,7 +30,7 @@ const profileName = "Profile";
 const Tab = createBottomTabNavigator();
 
 function MainContainer() {
-    
+
 
     return (
         <NavigationContainer>
@@ -91,7 +91,11 @@ function MainContainer() {
 
 
             </Tab.Navigator>
-            <StatusBar style="light" />
+            <StatusBar
+                style="dark"   // ← texte en NOIR
+                backgroundColor="white"    // ← fond blanc sous l’heure
+                translucent={false}        // ← force la couleur de fond
+            />
         </NavigationContainer>
 
     );

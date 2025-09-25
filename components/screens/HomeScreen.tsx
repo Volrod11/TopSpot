@@ -41,6 +41,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
+const HEADER_HEIGHT = 80;
 
 type HomeScreenNavigationProp = StackNavigationProp<
     HomeScreenStackParamList,
@@ -85,7 +86,14 @@ type Profiles = {
 
 type FeedItem =
     | { type: "picture"; data: Pictures_with_infos }
-    | { type: "garage"; data: Garage_with_pictures_and_description };
+    | { type: "garage"; data: Garage_with_pictures_and_description }
+    | { type: "discover"; component: "grid" | "profiles" | "nearby" };
+
+const DISCOVER_TYPES: Array<"grid" | "profiles" | "nearby"> = [
+  "grid",
+  "profiles",
+  "nearby",
+];
 
 
 const fetchHomepageContents = async () => {
@@ -200,19 +208,8 @@ export default function HomeScreen() {
     const slideAnim = useRef(new Animated.Value(height)).current;
     const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>>();
     const { location, errorMsg, loading } = useUserLocation(true);
-    const scrollY = useRef(new Animated.Value(0)).current;
     const insets = useSafeAreaInsets();
-    const headerTranslate = scrollY.interpolate({
-        inputRange: [0, 50],
-        outputRange: [0, -80],
-        extrapolate: "clamp",
-    });
-
-    const headerBackgroundColor = scrollY.interpolate({
-        inputRange: [0, 50],
-        outputRange: ["#FFD93D", "#FFFFFF"], // jaune → blanc
-        extrapolate: "clamp",
-    });
+    const usedDiscoverTypes = useRef<Set<string>>(new Set());
 
 
     const [cityRegion, setCityRegion] = useState<CityRegion>(null);
@@ -251,7 +248,6 @@ export default function HomeScreen() {
         if (loadingPicturesAndGarages || (!hasMorePicture && !hasMoreGarage)) return;
         setLoadingPicturesAndGarages(true);
 
-
         let newPictures: Pictures_with_infos[] = [];
         let newGarages: Garage_with_pictures_and_description[] = [];
         let filteredPictures: Pictures_with_infos[] = [];
@@ -263,14 +259,11 @@ export default function HomeScreen() {
                 p => !addedPictureIds.current.has(p.picture_id)
             );
             filteredPictures.forEach(p => addedPictureIds.current.add(p.picture_id));
-
-            setPictures((prev => [...prev, ...filteredPictures]));
         }
 
-
-
         if (hasMoreGarage) {
-            newGarages = await fetchHomePageGarages(null,
+            newGarages = await fetchHomePageGarages(
+                null,
                 null,
                 false,
                 true,
@@ -278,34 +271,57 @@ export default function HomeScreen() {
                 false,
                 limit,
                 offset,
-                null);
-            filteredGarages = newGarages.filter(
-                p => !addedGarageIds.current.has(p.garage_id)
+                null
             );
-            filteredGarages.forEach(p => addedGarageIds.current.add(p.garage_id));
-
-            setGarages((prev => [...prev, ...filteredGarages]))
+            filteredGarages = newGarages.filter(
+                g => !addedGarageIds.current.has(g.garage_id)
+            );
+            filteredGarages.forEach(g => addedGarageIds.current.add(g.garage_id));
         }
-
 
         const merged: FeedItem[] = [
-            ...filteredPictures.map(p => ({ type: 'picture' as const, data: p })),
-            ...filteredGarages.map(g => ({ type: 'garage' as const, data: g }))
-        ];
+    ...filteredPictures.map(p => ({ type: "picture" as const, data: p })),
+    ...filteredGarages.map(g => ({ type: "garage" as const, data: g })),
+  ];
 
-        merged.sort(() => Math.random() - 0.5);
+  merged.sort(() => Math.random() - 0.5);
 
-        setItems(prev => [...prev, ...merged]);
+  const withDiscover: FeedItem[] = [];
+  let counter = items.length;
 
-        setOffset(prev => prev + limit);
+  merged.forEach((item) => {
+    withDiscover.push(item);
+    counter++;
 
-        if (newPictures.length < limit && newGarages.length < limit) {
-            setHasMorePicture(false);
-            setHasMoreGarage(false);
-        }
+    if (counter % 5 === 0) {
+      // ✅ Filtrer les types déjà utilisés
+      const remaining = DISCOVER_TYPES.filter(
+        t => !usedDiscoverTypes.current.has(t)
+      );
 
-        setLoadingPicturesAndGarages(false);
-    }, [offset, loadingPicturesAndGarages, hasMorePicture, hasMoreGarage]);
+      if (remaining.length > 0) {
+        // Choisir aléatoirement parmi les restants
+        const rand =
+          remaining[Math.floor(Math.random() * remaining.length)];
+
+        withDiscover.push({ type: "discover", component: rand });
+        usedDiscoverTypes.current.add(rand); // ✅ Mémoriser
+        counter++;
+      }
+    }
+  });
+
+  setItems(prev => [...prev, ...withDiscover]);
+  setOffset(prev => prev + limit);
+
+  if (newPictures.length < limit && newGarages.length < limit) {
+    setHasMorePicture(false);
+    setHasMoreGarage(false);
+  }
+
+  setLoadingPicturesAndGarages(false);
+}, [offset, loadingPicturesAndGarages, hasMorePicture, hasMoreGarage, items.length]);
+
 
 
     useEffect(() => {
@@ -370,22 +386,10 @@ export default function HomeScreen() {
             toValue: height,
             duration: 300,
             useNativeDriver: true,
+
         }).start(() => {
             setSearchVisible(false);
         });
-    };
-
-    const handleScroll = (event: any) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-
-        if (offsetY < 0) {
-            // On est tout en haut, header visible
-            scrollY.setValue(0);
-        } else {
-            scrollY.setValue(offsetY);
-        }
-
-        setLastOffset(offsetY);
     };
 
 
@@ -397,87 +401,78 @@ export default function HomeScreen() {
 
     return (
         <View style={styles.homePage}>
-            {/* Zone safe area blanche */}
-            <View style={{ height: insets.top, backgroundColor: 'white' }} />
-
-            <Animated.View
-                style={{
-                    position: 'absolute',
-                    top: insets.top,
-                    left: 0,
-                    right: 0,
-                    height: 80,
-                    zIndex: 1000,
-                    backgroundColor: headerBackgroundColor,
-                    transform: [{ translateY: headerTranslate }],
-                }}
-            >
-                <Header openSearch={openSearch} />
-            </Animated.View>
-
-
-
-            <FlatList
+            <Animated.FlatList
                 style={{ flex: 1 }}
                 data={items}
-                keyExtractor={(item) =>
-                    item.type === 'picture' ? `pic-${item.data.picture_id}` : `garage-${item.data.garage_id}`
-                }
+                keyExtractor={(item, index) => {
+                    switch (item.type) {
+                        case "picture":
+                            return `pic-${item.data.picture_id}`;
+                        case "garage":
+                            return `garage-${item.data.garage_id}`;
+                        case "discover":
+                            return `discover-${item.component}-${index}`;
+                    }
+                }}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingTop: 80 + insets.top }}
+                contentContainerStyle={{ paddingTop: insets.top }}
                 onEndReached={loadPicturesAndGarages}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={loadingPicturesAndGarages ? <LoadingSpinner /> : null}
                 renderItem={({ item }) => {
-                    if (item.type === 'picture') {
+                    if (item.type === "picture") {
                         return (
                             <CardSection>
-                                <Picture
-                                    pictureWithInfos={item.data}
-                                />
+                                <Picture pictureWithInfos={item.data} />
                             </CardSection>
                         );
-                    } else {
+                    } else if (item.type === "garage") {
                         return (
                             <CardSection title="Garage">
-                                <Garage
-                                    garage={item.data}
-                                />
+                                <Garage garage={item.data} />
                             </CardSection>
                         );
+                    } else if (item.type === "discover") {
+                        switch (item.component) {
+                            case "grid":
+                                return <DiscoveryGrid topsPictures={topsPictures} />;
+                            case "profiles":
+                                return suggestedProfiles.length >= 5 ? (
+                                    <SuggestedProfiles />
+                                ) : null;
+                            case "nearby":
+                                return nearbyCars.length === 2 ? (
+                                    <MultipleCardSection title={"Spots proches de toi"}>
+                                        <NearbyCars
+                                            nearbyCar1={nearbyCars[0]}
+                                            nearbyCar2={nearbyCars[1]}
+                                            cityRegion={cityRegion}
+                                        />
+                                    </MultipleCardSection>
+                                ) : null;
+                        }
                     }
                 }}
                 ListHeaderComponent={
                     <>
+                        <Header openSearch={openSearch} />
                         <GarageOfTheMonth />
-
-                        <DiscoveryGrid topsPictures={topsPictures} />
-
-                        {suggestedProfiles.length >= 5 && <SuggestedProfiles />}
-
-
-                        <MultipleCardSection title={"Spots proches de toi"}>
-                            {nearbyCars.length === 2 && <NearbyCars nearbyCar1={nearbyCars[0]} nearbyCar2={nearbyCars[1]} cityRegion={cityRegion} />}
-                        </MultipleCardSection>
-
-
-
                     </>
                 }
-                scrollEventThrottle={16}
-                onScroll={handleScroll}
             />
 
 
             {/* Overlay SearchScreen */}
-            {searchVisible && (
-                <Animated.View
-                    style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
-                >
-                    <SearchPage onClose={closeSearch} />
-                </Animated.View>
-            )}
-        </View>
+            {
+                searchVisible && (
+                    <Animated.View
+                        style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
+                    >
+                        <SearchPage onClose={closeSearch} />
+                    </Animated.View>
+                )
+            }
+        </View >
     );
 }
 
