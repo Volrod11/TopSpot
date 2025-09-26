@@ -35,9 +35,13 @@ import useUserLocation from "../../utils/useUserLocation";
 import { getCityRegionFromCoords } from "../../utils/getCityRegionFromCoords";
 import NearbyCars from "../HomeComponent/components/NearbyCars";
 import NewGarageCard from "../HomeComponent/components/NewGarageCard";
+import { fetchHomePageGarages } from "../../utils/fetchHomePageGarages";
+import GarageOfTheMonth from "../HomeComponent/components/GarageOfTheMonth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("window");
 const PlaceholderImage = require("../../assets/topspottitle.png");
+const HEADER_HEIGHT = 80;
 
 type HomeScreenNavigationProp = StackNavigationProp<
     HomeScreenStackParamList,
@@ -82,7 +86,14 @@ type Profiles = {
 
 type FeedItem =
     | { type: "picture"; data: Pictures_with_infos }
-    | { type: "garage"; data: Garage_with_pictures_and_description };
+    | { type: "garage"; data: Garage_with_pictures_and_description }
+    | { type: "discover"; component: "grid" | "profiles" | "nearby" };
+
+const DISCOVER_TYPES: Array<"grid" | "profiles" | "nearby"> = [
+  "grid",
+  "profiles",
+  "nearby",
+];
 
 
 const fetchHomepageContents = async () => {
@@ -108,26 +119,6 @@ const fetchHomePagePictures = async (limit: number, offset: number) => {
     return data as Pictures_with_infos[];
 }
 
-const fetchHomePageGarages = async (limit: number, offset: number) => {
-    const { data, error } = await supabase.rpc("get_garages_and_car_types_with_details_and_description", {
-        p_query: null,
-        p_profile_id: null,
-        p_only_one: false,
-        p_empty_garage: false,
-        p_is_garage_finished: true,
-        p_duration_type: "monthly",
-        p_sort_by: null,
-        p_limit: limit,
-        p_offset: offset,
-    });
-    if (error) {
-        console.error("Error fetching homepage garages:", error);
-        return [];
-    }
-
-    return data as Garage_with_pictures_and_description[];
-}
-
 
 const fetchTopPictures = async () => {
     const { data, error } = await supabase.rpc('get_random_top_homepage');
@@ -137,7 +128,7 @@ const fetchTopPictures = async () => {
     }
 
     console.log(data);
-    
+
     return data as TopPictures[];
 }
 
@@ -153,59 +144,44 @@ const fetchSuggestedProfiles = async () => {
 }
 
 
-const fetchNearbyCars = async (city :string, region: string) => {
-    const  {data, error} = await supabase.rpc("get_top2_pictures_city_or_region", {
-        p_city: city, p_region : region
+const fetchNearbyCars = async (city: string, region: string) => {
+    const { data, error } = await supabase.rpc("get_top2_pictures_city_or_region", {
+        p_city: city, p_region: region
     })
 
     if (error) {
         console.error("Error fetching top 2 nearby cars");
     }
-    
+
     return data as NearbyCar[];
 }
 
 
 const Header = ({ openSearch }: HeaderProps) => {
-    const slideAnim = useRef(new Animated.Value(height)).current;
-
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
-    const openMessaging = () => {
-        navigation.navigate("MessagingPage");
-    };
-
-    const openNotifications = () => {
-        navigation.navigate("NotificationsPage");
-    };
-
+    const openMessaging = () => navigation.navigate("MessagingPage");
+    const openNotifications = () => navigation.navigate("NotificationsPage");
 
     return (
-        <LinearGradient
-            colors={["#667DE9", "#764DA4"]}
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.gradient}
-        >
+        <View style={styles.headerContainer}>
             <View style={styles.topRow}>
-                <Text style={styles.title}>TopSpot</Text>
+                <Text style={styles.titleDark}>TopSpot</Text>
+
                 <View style={styles.iconsContainer}>
-                    <Pressable
-                        onPress={openNotifications}
-                        style={styles.iconButton}
-                        hitSlop={8}
-                    >
-                        <Ionicons name="notifications-outline" size={20} color="#fff" />
+                    <Pressable onPress={openNotifications} style={styles.iconButton} hitSlop={8}>
+                        <Ionicons name="notifications-outline" size={20} color="#1a1a1a" />
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>3</Text>
                         </View>
                     </Pressable>
+
                     <Pressable
                         onPress={openMessaging}
                         style={[styles.iconButton, { marginLeft: 12 }]}
                         hitSlop={8}
                     >
-                        <Ionicons name="chatbox-outline" size={20} color="#fff" />
+                        <Ionicons name="chatbox-outline" size={20} color="#1a1a1a" />
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>3</Text>
                         </View>
@@ -216,19 +192,25 @@ const Header = ({ openSearch }: HeaderProps) => {
                         style={[styles.iconButton, { marginLeft: 12 }]}
                         hitSlop={8}
                     >
-                        <Ionicons name="search-outline" size={20} color="#fff" />
+                        <Ionicons name="search-outline" size={20} color="#1a1a1a" />
                     </Pressable>
                 </View>
             </View>
-        </LinearGradient >
-    )
-}
+        </View>
+    );
+};
+
+
+
 
 export default function HomeScreen() {
 
     const slideAnim = useRef(new Animated.Value(height)).current;
     const navigation = useNavigation<NativeStackNavigationProp<HomeScreenStackParamList, 'HomeScreen'>>();
     const { location, errorMsg, loading } = useUserLocation(true);
+    const insets = useSafeAreaInsets();
+    const usedDiscoverTypes = useRef<Set<string>>(new Set());
+
 
     const [cityRegion, setCityRegion] = useState<CityRegion>(null);
     const [searchVisible, setSearchVisible] = useState(false);
@@ -243,6 +225,7 @@ export default function HomeScreen() {
     const [topsPictures, setTopsPictures] = useState<TopPictures[]>([]);
     const [suggestedProfiles, setSuggestedProfiles] = useState<Profiles[]>([]);
     const [nearbyCars, setNearbyCars] = useState<NearbyCar[]>([]);
+    const [lastOffset, setLastOffset] = useState(0);
 
     const limit = 10;
     const addedPictureIds = useRef<Set<string>>(new Set());
@@ -265,7 +248,6 @@ export default function HomeScreen() {
         if (loadingPicturesAndGarages || (!hasMorePicture && !hasMoreGarage)) return;
         setLoadingPicturesAndGarages(true);
 
-
         let newPictures: Pictures_with_infos[] = [];
         let newGarages: Garage_with_pictures_and_description[] = [];
         let filteredPictures: Pictures_with_infos[] = [];
@@ -277,41 +259,69 @@ export default function HomeScreen() {
                 p => !addedPictureIds.current.has(p.picture_id)
             );
             filteredPictures.forEach(p => addedPictureIds.current.add(p.picture_id));
-
-            setPictures((prev => [...prev, ...filteredPictures]));
         }
-
-
 
         if (hasMoreGarage) {
-            newGarages = await fetchHomePageGarages(limit, offset);
-            filteredGarages = newGarages.filter(
-                p => !addedGarageIds.current.has(p.garage_id)
+            newGarages = await fetchHomePageGarages(
+                null,
+                null,
+                false,
+                true,
+                "monthly",
+                false,
+                limit,
+                offset,
+                null
             );
-            filteredGarages.forEach(p => addedGarageIds.current.add(p.garage_id));
-
-            setGarages((prev => [...prev, ...filteredGarages]))
+            filteredGarages = newGarages.filter(
+                g => !addedGarageIds.current.has(g.garage_id)
+            );
+            filteredGarages.forEach(g => addedGarageIds.current.add(g.garage_id));
         }
-
 
         const merged: FeedItem[] = [
-            ...filteredPictures.map(p => ({ type: 'picture' as const, data: p })),
-            ...filteredGarages.map(g => ({ type: 'garage' as const, data: g }))
-        ];
+    ...filteredPictures.map(p => ({ type: "picture" as const, data: p })),
+    ...filteredGarages.map(g => ({ type: "garage" as const, data: g })),
+  ];
 
-        merged.sort(() => Math.random() - 0.5);
+  merged.sort(() => Math.random() - 0.5);
 
-        setItems(prev => [...prev, ...merged]);
+  const withDiscover: FeedItem[] = [];
+  let counter = items.length;
 
-        setOffset(prev => prev + limit);
+  merged.forEach((item) => {
+    withDiscover.push(item);
+    counter++;
 
-        if (newPictures.length < limit && newGarages.length < limit) {
-            setHasMorePicture(false);
-            setHasMoreGarage(false);
-        }
+    if (counter % 5 === 0) {
+      // ✅ Filtrer les types déjà utilisés
+      const remaining = DISCOVER_TYPES.filter(
+        t => !usedDiscoverTypes.current.has(t)
+      );
 
-        setLoadingPicturesAndGarages(false);
-    }, [offset, loadingPicturesAndGarages, hasMorePicture, hasMoreGarage]);
+      if (remaining.length > 0) {
+        // Choisir aléatoirement parmi les restants
+        const rand =
+          remaining[Math.floor(Math.random() * remaining.length)];
+
+        withDiscover.push({ type: "discover", component: rand });
+        usedDiscoverTypes.current.add(rand); // ✅ Mémoriser
+        counter++;
+      }
+    }
+  });
+
+  setItems(prev => [...prev, ...withDiscover]);
+  setOffset(prev => prev + limit);
+
+  if (newPictures.length < limit && newGarages.length < limit) {
+    setHasMorePicture(false);
+    setHasMoreGarage(false);
+  }
+
+  setLoadingPicturesAndGarages(false);
+}, [offset, loadingPicturesAndGarages, hasMorePicture, hasMoreGarage, items.length]);
+
 
 
     useEffect(() => {
@@ -376,12 +386,11 @@ export default function HomeScreen() {
             toValue: height,
             duration: 300,
             useNativeDriver: true,
+
         }).start(() => {
             setSearchVisible(false);
         });
     };
-
-
 
 
     if (loading) return <ActivityIndicator size="large" color="blue" />;
@@ -392,67 +401,78 @@ export default function HomeScreen() {
 
     return (
         <View style={styles.homePage}>
-            <FlatList
+            <Animated.FlatList
                 style={{ flex: 1 }}
                 data={items}
-                keyExtractor={(item) =>
-                    item.type === 'picture' ? `pic-${item.data.picture_id}` : `garage-${item.data.garage_id}`
-                }
+                keyExtractor={(item, index) => {
+                    switch (item.type) {
+                        case "picture":
+                            return `pic-${item.data.picture_id}`;
+                        case "garage":
+                            return `garage-${item.data.garage_id}`;
+                        case "discover":
+                            return `discover-${item.component}-${index}`;
+                    }
+                }}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingTop: insets.top }}
                 onEndReached={loadPicturesAndGarages}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={loadingPicturesAndGarages ? <LoadingSpinner /> : null}
                 renderItem={({ item }) => {
-                    if (item.type === 'picture') {
+                    if (item.type === "picture") {
                         return (
                             <CardSection>
-                                <Picture
-                                    pictureWithInfos={item.data}
-                                />
+                                <Picture pictureWithInfos={item.data} />
                             </CardSection>
                         );
-                    } else {
+                    } else if (item.type === "garage") {
                         return (
                             <CardSection title="Garage">
-                                <Garage
-                                    garage={item.data}
-                                />
+                                <Garage garage={item.data} />
                             </CardSection>
                         );
+                    } else if (item.type === "discover") {
+                        switch (item.component) {
+                            case "grid":
+                                return <DiscoveryGrid topsPictures={topsPictures} />;
+                            case "profiles":
+                                return suggestedProfiles.length >= 5 ? (
+                                    <SuggestedProfiles />
+                                ) : null;
+                            case "nearby":
+                                return nearbyCars.length === 2 ? (
+                                    <MultipleCardSection title={"Spots proches de toi"}>
+                                        <NearbyCars
+                                            nearbyCar1={nearbyCars[0]}
+                                            nearbyCar2={nearbyCars[1]}
+                                            cityRegion={cityRegion}
+                                        />
+                                    </MultipleCardSection>
+                                ) : null;
+                        }
                     }
                 }}
                 ListHeaderComponent={
                     <>
                         <Header openSearch={openSearch} />
-
-                        <NewGarageCard/>
-
-                        <DiscoveryGrid topsPictures={topsPictures} />
-
-                        {suggestedProfiles.length >= 5 && <SuggestedProfiles />}
-
-
-                        <MultipleCardSection title={"Spots proches de toi"}>
-                            {nearbyCars.length === 2 && <NearbyCars nearbyCar1={nearbyCars[0]} nearbyCar2={nearbyCars[1]} cityRegion={cityRegion}/>}
-                        </MultipleCardSection>
-
-                        
-
+                        <GarageOfTheMonth />
                     </>
                 }
             />
 
 
-
             {/* Overlay SearchScreen */}
-            {searchVisible && (
-                <Animated.View
-                    style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
-                >
-                    <SearchPage onClose={closeSearch} />
-                </Animated.View>
-            )}
-        </View>
+            {
+                searchVisible && (
+                    <Animated.View
+                        style={[styles.overlay, { transform: [{ translateY: slideAnim }] }]}
+                    >
+                        <SearchPage onClose={closeSearch} />
+                    </Animated.View>
+                )
+            }
+        </View >
     );
 }
 
@@ -477,48 +497,51 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    gradient: {
-        paddingTop: 60,
+    titleDark: {
+        fontSize: 26,
+        fontWeight: "800",
+        color: "#1a1a1a", // texte noir foncé
+        letterSpacing: 0.5,
+    },
+    headerContainer: {
+        backgroundColor: "white",
         paddingHorizontal: 16,
         paddingBottom: 10,
-        width: "100%",
-        marginBottom: 20,
+        height: 80,
+        justifyContent: "flex-end",
+    },
+
+    headerWrapper: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
     },
     topRow: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 15,
+        marginBottom: 10,
     },
     title: {
-        fontSize: 24,
-        fontWeight: "700",
-        color: "white",
-        letterSpacing: 1,
-        textShadowColor: "rgba(0,0,0,0.3)",
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
+        fontSize: 26,
+        fontWeight: "800",
+        color: "#1a1a1a", // Noir profond
+        letterSpacing: 0.5,
     },
     iconsContainer: {
         flexDirection: "row",
         alignItems: "center",
     },
     iconButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "rgba(255,255,255,0.15)",
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: "rgba(0,0,0,0.08)", // cercle noir semi-transparent
         justifyContent: "center",
         alignItems: "center",
-        position: "relative", // pour que le badge soit placé dessus
-    },
-    iconWrapper: {
         position: "relative",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "rgba(255,255,255,0.15)",
-        padding: 6,
-        borderRadius: 20,
     },
     badge: {
         position: "absolute",
@@ -534,11 +557,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-
     badgeText: {
         color: "#fff",
         fontSize: 10,
         fontWeight: "700",
+    },
+    iconWrapper: {
+        position: "relative",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.15)",
+        padding: 6,
+        borderRadius: 20,
     },
     searchContainer: {
         flexDirection: "row",

@@ -10,6 +10,7 @@ import CommentsModal from '../../GeneralComponent/CommentsModal';
 
 type GarageProps = {
     garage: Garage_with_pictures_and_description
+    highlighted?: boolean
 };
 
 
@@ -233,7 +234,7 @@ const PictureCard = ({
 
 
 const Garage = ({
-    garage
+    garage,
 }: GarageProps) => {
     return (
         <View style={styles.container}>
@@ -386,7 +387,7 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         paddingVertical: 12,
         marginVertical: 12,
-        marginHorizontal: 5,
+        marginHorizontal: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
@@ -405,7 +406,7 @@ const styles = StyleSheet.create({
         color: '#444',
         fontSize: 13,
         lineHeight: 18,
-    },
+    }
 });
 
 export default Garage;

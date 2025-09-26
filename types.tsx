@@ -100,6 +100,8 @@ export type Pictures_with_infos = {
 }
 
 
+//Navigations
+
 /*export type RootStackParamList = {
     PicturesPage: { user_id: string, brand_filter?: string  };
     ProfileScreen: { };
